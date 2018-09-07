@@ -1,0 +1,8 @@
+v. 1.0.2, Sep 7, 2018
+  -migrated from subversion to github
+
+v. 1.0.1, Mar 5, 2018
+  -added support for bonobo, squirrel and dog
+
+v. 1.0.0, Dec 12, 2017
+  -first pipeline version, generate transitive annotations for chinchilla
