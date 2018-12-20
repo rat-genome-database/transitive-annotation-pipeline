@@ -1,3 +1,6 @@
+v. 1.0.3, Dec 20, 2018
+  -updated dependencies, revamped build.gradle
+
 v. 1.0.2, Sep 7, 2018
   -migrated from subversion to github
 
