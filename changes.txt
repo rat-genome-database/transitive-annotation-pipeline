@@ -1,3 +1,6 @@
+v. 1.0.4, Jan 4, 2019
+  -summary email tuneup
+
 v. 1.0.3, Dec 20, 2018
   -updated dependencies, revamped build.gradle
 

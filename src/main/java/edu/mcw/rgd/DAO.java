@@ -27,8 +27,8 @@ public class DAO {
     Logger logInserted = Logger.getLogger("inserted");
     Logger logDeleted = Logger.getLogger("deleted");
 
-    public DAO() {
-        System.out.println(xdao.getConnectionInfo());
+    public String getConnectionInfo() {
+        return xdao.getConnectionInfo();
     }
 
     /**
@@ -113,6 +113,10 @@ public class DAO {
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt);
         log.info("  stale annots found = "+staleAnnots.size());
+        if( staleAnnots.isEmpty() ) {
+            return 0;
+        }
+
         for( Annotation a: staleAnnots ) {
             logDeleted.debug(a.dump("|"));
         }

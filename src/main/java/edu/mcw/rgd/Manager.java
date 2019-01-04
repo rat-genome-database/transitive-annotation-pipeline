@@ -8,6 +8,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,9 +25,9 @@ public class Manager {
     private String pipelineName;
     private int createdBy;
     private int refRgdId;
+    private List<String> speciesProcessed;
 
     Logger log = Logger.getLogger("core");
-    Logger logStatus = Logger.getLogger("status");
 
     public static void main(String[] args) throws Exception {
 
@@ -44,23 +45,33 @@ public class Manager {
 
     public void run() throws Exception {
         Date dateStart = new Date();
-        logStatus.info(getVersion());
+        log.info(getVersion());
 
-        run(SpeciesType.BONOBO);
-        run(SpeciesType.CHINCHILLA);
-        run(SpeciesType.DOG);
-        run(SpeciesType.SQUIRREL);
+        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.info("  started at: "+sdt.format(dateStart));
+        log.info("  "+dao.getConnectionInfo());
+        log.info("===");
 
-        logStatus.info("deleting stale annotations...");
-        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, logStatus);
-        logStatus.info("stale annotations deleted : "+Utils.formatThousands(annotDeleted));
+        for( String speciesName: getSpeciesProcessed() ) {
+            run(speciesName);
+        }
+
+        log.info("deleting stale annotations...");
+        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, log);
+        log.info("stale annotations deleted : "+Utils.formatThousands(annotDeleted));
 
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
+        log.info("");
     }
 
-    public void run(int speciesTypeKey) throws Exception {
+    void run(String speciesName) throws Exception {
 
         long startTime = System.currentTimeMillis();
+
+        int speciesTypeKey = SpeciesType.parse(speciesName);
+        if( SpeciesType.getTaxonomicId(speciesTypeKey)==0 ) {
+            throw new Exception("ERROR: invalid species: "+speciesName);
+        }
 
         String species = SpeciesType.getCommonName(speciesTypeKey);
         log.info("START: species = " + species);
@@ -73,11 +84,11 @@ public class Manager {
 
     void handle(String species, int speciesTypeKey) throws Exception {
 
-        logStatus.debug("processing annotations for Human-"+species+" orthologs");
+        log.debug("processing annotations for Human-"+species+" orthologs");
 
         AnnotInfo info = new AnnotInfo(speciesTypeKey);
         List<Ortholog> orthologs = dao.getAllOrthologs(SpeciesType.HUMAN, speciesTypeKey);
-        logStatus.info("Human-"+species+" orthologs loaded: "+Utils.formatThousands(orthologs.size()));
+        log.info("Human-"+species+" orthologs loaded: "+Utils.formatThousands(orthologs.size()));
 
         orthologs.parallelStream().forEach( o -> {
             try {
@@ -87,8 +98,8 @@ public class Manager {
             }
         });
 
-        logStatus.info("annotations inserted: "+Utils.formatThousands(info.insertedAnnots.get()));
-        logStatus.info("annotations matching: "+Utils.formatThousands(info.matchingAnnots.get()));
+        log.info("annotations inserted: "+Utils.formatThousands(info.insertedAnnots.get()));
+        log.info("annotations matching: "+Utils.formatThousands(info.matchingAnnots.get()));
     }
 
     void handleAnnotations(int humanRgdId, int orthoRgdId, AnnotInfo info) throws Exception {
@@ -190,6 +201,14 @@ public class Manager {
 
     public int getRefRgdId() {
         return refRgdId;
+    }
+
+    public List<String> getSpeciesProcessed() {
+        return speciesProcessed;
+    }
+
+    public void setSpeciesProcessed(List<String> speciesProcessed) {
+        this.speciesProcessed = speciesProcessed;
     }
 
     class AnnotInfo {
