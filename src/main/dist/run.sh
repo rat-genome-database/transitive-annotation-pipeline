@@ -4,6 +4,7 @@
 
 APPNAME=TransitiveAnnotPipeline
 APPDIR=/home/rgddata/pipelines/$APPNAME
+SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 
 cd $APPDIR
 
