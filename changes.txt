@@ -1,3 +1,6 @@
+v. 1.0.5, Jan 7, 2019
+  -stale annotations are now deleted (and reported) per species
+
 v. 1.0.4, Jan 4, 2019
   -summary email tuneup
 

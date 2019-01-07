@@ -56,10 +56,6 @@ public class Manager {
             run(speciesName);
         }
 
-        log.info("deleting stale annotations...");
-        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, log);
-        log.info("stale annotations deleted : "+Utils.formatThousands(annotDeleted));
-
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
         log.info("");
     }
@@ -76,13 +72,13 @@ public class Manager {
         String species = SpeciesType.getCommonName(speciesTypeKey);
         log.info("START: species = " + species);
 
-        handle(species, speciesTypeKey);
+        handle(species, speciesTypeKey, new Date(startTime));
 
         log.info("END:  time elapsed: " + Utils.formatElapsedTime(startTime, System.currentTimeMillis()));
         log.info("===");
     }
 
-    void handle(String species, int speciesTypeKey) throws Exception {
+    void handle(String species, int speciesTypeKey, Date dateStart) throws Exception {
 
         log.debug("processing annotations for Human-"+species+" orthologs");
 
@@ -100,6 +96,10 @@ public class Manager {
 
         log.info("annotations inserted: "+Utils.formatThousands(info.insertedAnnots.get()));
         log.info("annotations matching: "+Utils.formatThousands(info.matchingAnnots.get()));
+
+        log.debug("deleting stale annotations...");
+        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), speciesTypeKey, log);
+        log.info("stale annotations deleted : "+Utils.formatThousands(annotDeleted));
     }
 
     void handleAnnotations(int humanRgdId, int orthoRgdId, AnnotInfo info) throws Exception {

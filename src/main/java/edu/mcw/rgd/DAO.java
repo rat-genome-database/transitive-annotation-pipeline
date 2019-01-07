@@ -8,6 +8,7 @@ import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -109,19 +110,22 @@ public class DAO {
      * @return number of rows affected
      * @throws Exception on spring framework dao failure
      */
-    public int deleteAnnotationsCreatedBy(int createdBy, Date dt, Logger log) throws Exception{
+    public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, int speciesTypeKey, Logger log) throws Exception{
 
-        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt);
-        log.info("  stale annots found = "+staleAnnots.size());
+        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, refRgdId, speciesTypeKey);
+        log.debug("  stale annots found = "+staleAnnots.size());
         if( staleAnnots.isEmpty() ) {
             return 0;
         }
 
+        List<Integer> keys = new ArrayList<>(staleAnnots.size());
         for( Annotation a: staleAnnots ) {
             logDeleted.debug(a.dump("|"));
+            keys.add(a.getKey());
         }
-        int rws = annotationDAO.deleteAnnotations(createdBy, dt);
-        log.info("  stale annots deleted = "+rws);
+
+        int rws = annotationDAO.deleteAnnotations(keys);
+        log.debug("  stale annots deleted = "+rws);
         return rws;
     }
 
