@@ -8,10 +8,7 @@ import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author mtutaj
@@ -20,6 +17,8 @@ import java.util.List;
  * wrapper to handle all DAO code
  */
 public class DAO {
+
+    private Set<String> excludedOntologyAspects;
 
     XdbIdDAO xdao = new XdbIdDAO();
     AnnotationDAO annotationDAO = new AnnotationDAO();
@@ -60,10 +59,7 @@ public class DAO {
         Iterator<Annotation> it = annots.iterator();
         while( it.hasNext() ) {
             Annotation a = it.next();
-            if( a.getAspect().equals("E") || // CHEBI
-                    a.getAspect().equals("H") || // HPO
-                    a.getAspect().equals("N")    // MP
-                    ) {
+            if( getExcludedOntologyAspects().contains(a.getAspect()) ) {
                 it.remove();
             }
         }
@@ -129,4 +125,11 @@ public class DAO {
         return rws;
     }
 
+    public Set<String> getExcludedOntologyAspects() {
+        return excludedOntologyAspects;
+    }
+
+    public void setExcludedOntologyAspects(Set<String> excludedOntologyAspects) {
+        this.excludedOntologyAspects = excludedOntologyAspects;
+    }
 }

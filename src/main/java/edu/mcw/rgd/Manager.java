@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Manager {
 
-    private DAO dao = new DAO();
+    private DAO dao;
     private String version;
     private String pipelineName;
     private int createdBy;
@@ -169,6 +169,14 @@ public class Manager {
                 it.remove();
             }
         }
+    }
+
+    public DAO getDao() {
+        return dao;
+    }
+
+    public void setDao(DAO dao) {
+        this.dao = dao;
     }
 
     public void setVersion(String version) {

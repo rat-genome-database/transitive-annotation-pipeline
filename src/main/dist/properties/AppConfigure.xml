@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="manager" class="edu.mcw.rgd.Manager">
-        <property name="version" value="--Transitive Annotation pipeline -- ver. 1.0.5 -- Jan 7, 2019 --" />
+        <property name="version" value="--Transitive Annotation pipeline -- ver. 1.0.6 -- Jan 25, 2019 --" />
         <property name="pipelineName" value="Transitive Annotation Pipeline" />
         <property name="createdBy" value="67" />
         <property name="refRgdId" value="9068941" />
@@ -12,6 +12,17 @@
                 <value>dog</value>
                 <value>squirrel</value>
             </list>
+        </property>
+        <property name="dao" ref="dao"/>
+    </bean>
+
+    <bean id="dao" class="edu.mcw.rgd.DAO">
+        <property name="excludedOntologyAspects" >
+            <set>
+                <value>E</value> <!-- CHEBI -->
+                <value>H</value> <!-- HPO -->
+                <value>N</value> <!-- MP -->
+            </set>
         </property>
     </bean>
 </beans>
