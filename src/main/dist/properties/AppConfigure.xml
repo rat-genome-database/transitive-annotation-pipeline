@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="manager" class="edu.mcw.rgd.Manager">
-        <property name="version" value="--Transitive Annotation pipeline -- ver. 1.0.6 -- Jan 25, 2019 --" />
+        <property name="version" value="--Transitive Annotation pipeline -- ver. 1.0.7 -- Jan 29, 2019 --" />
         <property name="pipelineName" value="Transitive Annotation Pipeline" />
         <property name="createdBy" value="67" />
         <property name="refRgdId" value="9068941" />
@@ -11,6 +11,7 @@
                 <value>chinchilla</value>
                 <value>dog</value>
                 <value>squirrel</value>
+                <value>pig</value>
             </list>
         </property>
         <property name="dao" ref="dao"/>
