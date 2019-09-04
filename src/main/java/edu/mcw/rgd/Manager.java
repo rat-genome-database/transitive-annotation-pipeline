@@ -28,7 +28,6 @@ public class Manager {
     private int refRgdId;
     private List<String> speciesProcessed;
     private String evidenceCode;
-    private int droppedGOAnnots = 0;
 
     Logger log = Logger.getLogger("core");
 
@@ -97,15 +96,21 @@ public class Manager {
             }
         });
 
-        log.info("annotations inserted: "+Utils.formatThousands(info.insertedAnnots.get()));
+        int count = info.insertedAnnots.get();
+        if( count!=0 ) {
+            log.info("annotations inserted: " + Utils.formatThousands(count));
+        }
         log.info("annotations matching: "+Utils.formatThousands(info.matchingAnnots.get()));
 
         log.debug("deleting stale annotations...");
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), speciesTypeKey, log);
-        log.info("stale annotations deleted : "+Utils.formatThousands(annotDeleted));
+        if( annotDeleted!=0 ) {
+            log.info("stale annotations deleted : " + Utils.formatThousands(annotDeleted));
+        }
 
-        if( droppedGOAnnots!=0 ) {
-            log.info("  dropped GO annotations for DOG/PIG: "+droppedGOAnnots);
+        count = info.droppedGOAnnots.get();
+        if( count!=0 ) {
+            log.info("  dropped GO annotations for DOG/PIG: "+ Utils.formatThousands(count));
         }
     }
 
@@ -116,7 +121,10 @@ public class Manager {
         // hack for DOG,PIG -- DOG,PIG have its GO annotations loaded via MAH GO pipeline
         //  no need to create duplicate transitive orthologs
         if( orthoSpeciesTypeKey==SpeciesType.DOG || orthoSpeciesTypeKey==SpeciesType.PIG ) {
-            droppedGOAnnots += dropGoAnnots(annots);
+            int count = dropGoAnnots(annots);
+            if( count!=0 ) {
+                info.droppedGOAnnots.addAndGet(count);
+            }
         }
 
         // turn human annots into chinchilla annots
@@ -245,6 +253,7 @@ public class Manager {
 
         public AtomicInteger insertedAnnots = new AtomicInteger(0);
         public AtomicInteger matchingAnnots = new AtomicInteger(0);
+        public AtomicInteger droppedGOAnnots = new AtomicInteger(0);
         public int speciesTypeKey; // species type key for ortholog species
     }
 }
