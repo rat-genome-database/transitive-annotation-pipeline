@@ -91,7 +91,7 @@ public class Manager {
 
         orthologs.parallelStream().forEach( o -> {
             try {
-                handleAnnotations(o.getSrcRgdId(), o.getDestRgdId(), info);
+                handleAnnotations(o.getSrcRgdId(), o.getDestRgdId(), o.getDestSpeciesTypeKey(), info);
             } catch(Exception e) {
                 throw new RuntimeException(e);
             }
@@ -109,13 +109,13 @@ public class Manager {
         }
     }
 
-    void handleAnnotations(int humanRgdId, int orthoRgdId, AnnotInfo info) throws Exception {
+    void handleAnnotations(int humanRgdId, int orthoRgdId, int orthoSpeciesTypeKey, AnnotInfo info) throws Exception {
 
         List<Annotation> annots = dao.getAnnotations(humanRgdId);
 
         // hack for DOG,PIG -- DOG,PIG have its GO annotations loaded via MAH GO pipeline
         //  no need to create duplicate transitive orthologs
-        if( orthoRgdId==SpeciesType.DOG || orthoRgdId==SpeciesType.PIG ) {
+        if( orthoSpeciesTypeKey==SpeciesType.DOG || orthoSpeciesTypeKey==SpeciesType.PIG ) {
             droppedGOAnnots += dropGoAnnots(annots);
         }
 
