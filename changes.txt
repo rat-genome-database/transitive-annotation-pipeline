@@ -1,3 +1,7 @@
+Sep 9, 2019
+  -transitive GO annotations are no longer created for PIG (just like it is for DOG), because nonrat-GO-annotation pipeline
+   is loading GO annotations for both DOG and PIG
+
 v. 1.0.7, Jan 29, 2019
   -added support for pig
 

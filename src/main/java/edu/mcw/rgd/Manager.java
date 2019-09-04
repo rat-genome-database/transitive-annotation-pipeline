@@ -16,7 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author mtutaj
  * @since Dec 12, 2017
  * based on human orthologs and human gene annotations,
- *    create ISS annotations for chinchilla, squirrel and bonobo
+ *    create ISS annotations for chinchilla, squirrel, bonobo, dog and pig
+ *    for all ontologies except CHEBI, MP and HP
  */
 public class Manager {
 
@@ -26,6 +27,8 @@ public class Manager {
     private int createdBy;
     private int refRgdId;
     private List<String> speciesProcessed;
+    private String evidenceCode;
+    private int droppedGOAnnots = 0;
 
     Logger log = Logger.getLogger("core");
 
@@ -100,16 +103,20 @@ public class Manager {
         log.debug("deleting stale annotations...");
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), speciesTypeKey, log);
         log.info("stale annotations deleted : "+Utils.formatThousands(annotDeleted));
+
+        if( droppedGOAnnots!=0 ) {
+            log.info("  dropped GO annotations for DOG/PIG: "+droppedGOAnnots);
+        }
     }
 
     void handleAnnotations(int humanRgdId, int orthoRgdId, AnnotInfo info) throws Exception {
 
         List<Annotation> annots = dao.getAnnotations(humanRgdId);
 
-        // hack for DOG -- DOG has its GO annotations loaded via MAH GO pipeline
+        // hack for DOG,PIG -- DOG,PIG have its GO annotations loaded via MAH GO pipeline
         //  no need to create duplicate transitive orthologs
-        if( orthoRgdId==SpeciesType.DOG ) {
-            dropGoAnnots(annots);
+        if( orthoRgdId==SpeciesType.DOG || orthoRgdId==SpeciesType.PIG ) {
+            droppedGOAnnots += dropGoAnnots(annots);
         }
 
         // turn human annots into chinchilla annots
@@ -119,7 +126,7 @@ public class Manager {
             populateXRefSource(a);
 
             a.setWithInfo("RGD:" + a.getAnnotatedObjectRgdId());
-            a.setEvidence("ISS");
+            a.setEvidence(getEvidenceCode());
             a.setRefRgdId(getRefRgdId());
             a.setSpeciesTypeKey(info.speciesTypeKey);
             a.setAnnotatedObjectRgdId(orthoRgdId);
@@ -160,15 +167,18 @@ public class Manager {
         }
     }
 
-    void dropGoAnnots(List<Annotation> annots) {
+    int dropGoAnnots(List<Annotation> annots) {
 
+        int count = 0;
         Iterator<Annotation> it = annots.iterator();
         while( it.hasNext() ) {
             Annotation ann = it.next();
             if( ann.getTermAcc().startsWith("GO:") ) {
                 it.remove();
+                count++;
             }
         }
+        return count;
     }
 
     public DAO getDao() {
@@ -217,6 +227,14 @@ public class Manager {
 
     public void setSpeciesProcessed(List<String> speciesProcessed) {
         this.speciesProcessed = speciesProcessed;
+    }
+
+    public void setEvidenceCode(String evidenceCode) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    public String getEvidenceCode() {
+        return evidenceCode;
     }
 
     class AnnotInfo {
