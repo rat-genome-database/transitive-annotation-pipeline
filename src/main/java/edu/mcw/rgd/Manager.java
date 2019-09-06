@@ -86,6 +86,7 @@ public class Manager {
 
         AnnotInfo info = new AnnotInfo(speciesTypeKey);
         List<Ortholog> orthologs = dao.getAllOrthologs(SpeciesType.HUMAN, speciesTypeKey);
+        Collections.shuffle(orthologs); // randomize orthologs for better parallelism of annotations retrieval
         log.info("Human-"+species+" orthologs loaded: "+Utils.formatThousands(orthologs.size()));
 
         orthologs.parallelStream().forEach( o -> {
@@ -96,7 +97,12 @@ public class Manager {
             }
         });
 
-        int count = info.insertedAnnots.get();
+        int count = info.droppedGOAnnots.get();
+        if( count!=0 ) {
+            log.info("  skipped incoming human GO annotations: "+ Utils.formatThousands(count));
+        }
+
+        count = info.insertedAnnots.get();
         if( count!=0 ) {
             log.info("annotations inserted: " + Utils.formatThousands(count));
         }
@@ -106,11 +112,6 @@ public class Manager {
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), speciesTypeKey, log);
         if( annotDeleted!=0 ) {
             log.info("stale annotations deleted : " + Utils.formatThousands(annotDeleted));
-        }
-
-        count = info.droppedGOAnnots.get();
-        if( count!=0 ) {
-            log.info("  dropped GO annotations for DOG/PIG: "+ Utils.formatThousands(count));
         }
     }
 
@@ -127,13 +128,27 @@ public class Manager {
             }
         }
 
-        // turn human annots into chinchilla annots
+        // turn human annots into ISS annots
         for( Annotation a: annots ) {
 
             // put into XREF_SOURCE PMIDs associated with original human annotations
             populateXRefSource(a);
 
-            a.setWithInfo("RGD:" + a.getAnnotatedObjectRgdId());
+            // if WITH for human is empty, set it to RGD:human-gene-rgd_id
+            if( Utils.isStringEmpty(a.getWithInfo()) ) {
+                a.setWithInfo("RGD:" + a.getAnnotatedObjectRgdId());
+            } else {
+                // if WITH for human is not empty
+
+                //   and evidence code for human is 'ISS' or 'ISO'
+                if( Utils.stringsAreEqual(a.getWithInfo(), "ISS") || Utils.stringsAreEqual(a.getWithInfo(), "ISO") ) {
+                    // then keep original WITH INFO
+                } else {
+                    // otherwise: set WITH to human gene RGD ID
+                    a.setWithInfo("RGD:" + a.getAnnotatedObjectRgdId());
+                }
+            }
+
             a.setEvidence(getEvidenceCode());
             a.setRefRgdId(getRefRgdId());
             a.setSpeciesTypeKey(info.speciesTypeKey);

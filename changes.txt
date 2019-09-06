@@ -1,6 +1,11 @@
-Sep 9, 2019
-  -transitive GO annotations are no longer created for PIG (just like it is for DOG), because nonrat-GO-annotation pipeline
+Sep 6, 2019
+  -transitive GO annotations are no longer created for PIG and DOG, because nonrat-GO-annotation pipeline
    is loading GO annotations for both DOG and PIG
+
+  -implemented new WITH_INFO rules
+     1. if WITH_INFO for human gene is null, set it to 'RGD:<human-gene-rgd-id>'
+     2. if WITH_INFO for human gene is not null, and evidence code is one of {'ISS','ISO'}, set it to WITH_INFO from human annotation
+     3. if WITH_INFO for human gene is not null, and evidence code is other than {'ISS','ISO'}, set it to 'RGD:<human-gene-rgd-id>'
 
 v. 1.0.7, Jan 29, 2019
   -added support for pig

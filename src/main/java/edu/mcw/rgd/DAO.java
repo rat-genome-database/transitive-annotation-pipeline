@@ -9,6 +9,7 @@ import edu.mcw.rgd.datamodel.ontology.Annotation;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author mtutaj
@@ -55,7 +56,13 @@ public class DAO {
      * @throws Exception on spring framework dao failure
      */
     public List<Annotation> getAnnotations(int rgdId) throws Exception {
-        List<Annotation> annots = annotationDAO.getAnnotations(rgdId);
+
+        List<Annotation> annots = _annotCache.get(rgdId);
+        if( annots!=null ) {
+            return annots;
+        }
+
+        annots = annotationDAO.getAnnotations(rgdId);
         Iterator<Annotation> it = annots.iterator();
         while( it.hasNext() ) {
             Annotation a = it.next();
@@ -63,8 +70,10 @@ public class DAO {
                 it.remove();
             }
         }
+        _annotCache.put(rgdId, annots);
         return annots;
     }
+    static ConcurrentHashMap<Integer, List<Annotation>> _annotCache = new ConcurrentHashMap<>();
 
     /**
      * get annotation key by a list of values that comprise unique key:
