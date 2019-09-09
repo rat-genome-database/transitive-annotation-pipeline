@@ -8,6 +8,8 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,6 +32,8 @@ public class Manager {
     private String evidenceCode;
 
     Logger log = Logger.getLogger("core");
+
+    NumberFormat plusMinusNF = new DecimalFormat(" +###,###,###; -###,###,###");
 
     public static void main(String[] args) throws Exception {
 
@@ -89,6 +93,8 @@ public class Manager {
         Collections.shuffle(orthologs); // randomize orthologs for better parallelism of annotations retrieval
         log.info("Human-"+species+" orthologs loaded: "+Utils.formatThousands(orthologs.size()));
 
+        int origAnnotCount = dao.getAnnotationCount(getRefRgdId(), speciesTypeKey);
+
         orthologs.parallelStream().forEach( o -> {
             try {
                 handleAnnotations(o.getSrcRgdId(), o.getDestRgdId(), o.getDestSpeciesTypeKey(), info);
@@ -106,13 +112,21 @@ public class Manager {
         if( count!=0 ) {
             log.info("annotations inserted: " + Utils.formatThousands(count));
         }
-        log.info("annotations matching: "+Utils.formatThousands(info.matchingAnnots.get()));
 
         log.debug("deleting stale annotations...");
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), speciesTypeKey, log);
         if( annotDeleted!=0 ) {
             log.info("stale annotations deleted : " + Utils.formatThousands(annotDeleted));
         }
+
+        int newAnnotCount = dao.getAnnotationCount(getRefRgdId(), speciesTypeKey);
+
+        log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted));
+        log.info("    last-modified-date updated for "+Utils.formatThousands(info.matchingAnnots.get())+" annotations");
+
+        int diffAnnotCount = newAnnotCount - origAnnotCount;
+        String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
+        log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
     }
 
     void handleAnnotations(int humanRgdId, int orthoRgdId, int orthoSpeciesTypeKey, AnnotInfo info) throws Exception {

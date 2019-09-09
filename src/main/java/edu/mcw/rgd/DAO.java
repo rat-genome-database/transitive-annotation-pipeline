@@ -50,6 +50,18 @@ public class DAO {
     }
 
     /**
+     * get count of annotations created by the pipeline for given species
+     * @param refRgdId reference rgd id for Transitive Annotation Pipeline
+     * @param speciesTypeKey species type key
+     * @return count of annotations created by the pipeline for given species
+     */
+    public int getAnnotationCount(int refRgdId, int speciesTypeKey) throws Exception {
+        // TODO: create an overload in AnnotationDAO: getCountOfAnnotationsByReference(int refRgdId, int speciesTypeKey)
+        String query = "SELECT COUNT(*) FROM full_annot a,rgd_ids r WHERE ref_rgd_id=? AND annotated_object_rgd_id=rgd_id AND object_status='ACTIVE' AND species_type_key=?";
+        return annotationDAO.getCount(query, refRgdId, speciesTypeKey);
+    }
+
+    /**
      * get annotations by annotated object rgd id; skip CHEBI, HP and MP annotations
      * @param rgdId annotated object rgd id
      * @return list of Annotation objects
