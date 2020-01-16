@@ -111,14 +111,8 @@ public class DAO {
         return annotationDAO.insertAnnotation(annot);
     }
 
-    /**
-     * update last modified date to SYSDATE for annotation given full annot key
-     * @param fullAnnotKey FULL_ANNOT_KEY
-     * @return count of rows affected
-     * @throws Exception on spring framework dao failure
-     */
-    public int updateLastModified(int fullAnnotKey) throws Exception{
-        return annotationDAO.updateLastModified(fullAnnotKey);
+    public int updateLastModified(List<Integer> fullAnnotKeys) throws Exception{
+        return annotationDAO.updateLastModified(fullAnnotKeys);
     }
 
     /**

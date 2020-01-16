@@ -12,6 +12,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -113,16 +114,18 @@ public class Manager {
             log.info("annotations inserted: " + Utils.formatThousands(count));
         }
 
+        // update last modified date for matching annots in batches
+        updateLastModified(info);
+
         log.debug("deleting stale annotations...");
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), speciesTypeKey, log);
         if( annotDeleted!=0 ) {
-            log.info("stale annotations deleted : " + Utils.formatThousands(annotDeleted));
+            log.info("annotations deleted : " + Utils.formatThousands(annotDeleted));
         }
 
         int newAnnotCount = dao.getAnnotationCount(getRefRgdId(), speciesTypeKey);
 
-        log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted));
-        log.info("    last-modified-date updated for "+Utils.formatThousands(info.matchingAnnots.get())+" annotations");
+        log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted)+"    (last-modified-date updated)");
 
         int diffAnnotCount = newAnnotCount - origAnnotCount;
         String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
@@ -176,8 +179,7 @@ public class Manager {
                 dao.insertAnnotation(a);
                 info.insertedAnnots.incrementAndGet();
             } else {
-                dao.updateLastModified(fullAnnotKey);
-                info.matchingAnnots.incrementAndGet();
+                info.upToDateFullAnnotKeys.put(fullAnnotKey, 0);
             }
         }
     }
@@ -216,6 +218,24 @@ public class Manager {
             }
         }
         return count;
+    }
+
+    int updateLastModified(AnnotInfo info) throws Exception {
+
+        int rowsUpdated = 0;
+
+        // do the updates in batches of 999, because Oracle has an internal limit of 1000
+        List<Integer> fullAnnotKeys = new ArrayList<>(info.upToDateFullAnnotKeys.keySet());
+        for( int i=0; i<fullAnnotKeys.size(); i+= 999 ) {
+            int j = i + 999;
+            if( j > fullAnnotKeys.size() ) {
+                j = fullAnnotKeys.size();
+            }
+            List<Integer> fullAnnotKeysSubset = fullAnnotKeys.subList(i, j);
+            rowsUpdated += dao.updateLastModified(fullAnnotKeysSubset);
+        }
+
+        return rowsUpdated;
     }
 
     public DAO getDao() {
@@ -281,9 +301,10 @@ public class Manager {
         }
 
         public AtomicInteger insertedAnnots = new AtomicInteger(0);
-        public AtomicInteger matchingAnnots = new AtomicInteger(0);
         public AtomicInteger droppedGOAnnots = new AtomicInteger(0);
         public int speciesTypeKey; // species type key for ortholog species
+        // we store them in a map to avoid multiple updates
+        public ConcurrentHashMap<Integer, Object> upToDateFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
     }
 }
 
