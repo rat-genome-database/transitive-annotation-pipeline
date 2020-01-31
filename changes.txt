@@ -1,3 +1,6 @@
+Jan 31, 2020
+  -added support for vervet (green monkey) and naked mole rat
+
 Jan 16, 2020
   -fixed updates of last modified date for up-to-date annots
 

@@ -1,5 +1,5 @@
 # transitive-annotation-pipeline
-Create transitive (ISS) annotations for non-core species (bonobo, chinchilla, dog, pig and squirrel) based on human gene annotations.
+Create transitive (ISS) annotations for non-core species (bonobo, chinchilla, dog, pig, squirrel, vervet (green monkey) and naked mole rat) based on human gene annotations.
 
 Notes:
 
