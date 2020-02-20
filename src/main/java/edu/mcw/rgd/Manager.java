@@ -146,7 +146,10 @@ public class Manager {
         }
 
         // turn human annots into ISS annots
-        for( Annotation a: annots ) {
+        for( Annotation annot: annots ) {
+
+            // clone the annotation object (we do not want to modify original cached human annotations!)
+            Annotation a = (Annotation) annot.clone();
 
             // put into XREF_SOURCE PMIDs associated with original human annotations
             populateXRefSource(a);

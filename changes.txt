@@ -1,3 +1,6 @@
+Feb 20, 2020
+  -fixed problem with incorrect rgd ids in WITH field
+
 Jan 31, 2020
   -added support for vervet (green monkey) and naked mole rat
 
