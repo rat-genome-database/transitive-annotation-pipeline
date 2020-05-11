@@ -1,9 +1,10 @@
 package edu.mcw.rgd;
 
 import edu.mcw.rgd.datamodel.ontology.Annotation;
+import edu.mcw.rgd.process.Utils;
+import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,7 +28,9 @@ public class AnnotCache {
 
     public void qcAndLoadAnnots(DAO dao) {
 
-        incomingAnnots.parallelStream().forEach( a -> {
+        List<Annotation> mergedAnnots = mergeIncomingAnnots();
+
+        mergedAnnots.parallelStream().forEach( a -> {
 
             try {
                 int fullAnnotKey = dao.getAnnotationKey(a);
@@ -41,5 +44,47 @@ public class AnnotCache {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    /**
+     * Incoming annots built on the base of human ClinVar annots are often quite similar, differing only in XREF_SOURCE field.
+     * Per RGD strategy, we can safely merge these annots into a single one, with its WITH_INFO field being an aggregate of WITH_INFO field
+     * from source annotations.
+     */
+    List<Annotation> mergeIncomingAnnots() {
+
+        Logger log = Logger.getLogger("core");
+        log.info("   incoming annot count = "+incomingAnnots.size());
+
+        Map<String, Annotation> mergedAnnots = new HashMap<>();
+        for( Annotation a: incomingAnnots ) {
+            String key = getMergeKey(a);
+            Annotation mergedA = mergedAnnots.get(key);
+            if( mergedA==null ) {
+                mergedAnnots.put(key, a);
+            } else {
+                // merge WITH_INFO field
+                Set<String> xrefs;
+                if( a.getXrefSource()!=null ) {
+                    xrefs = new TreeSet<>(Arrays.asList(a.getXrefSource().split("[\\|,;]")));
+                } else {
+                    xrefs = new TreeSet<>();
+                }
+                if( mergedA.getXrefSource()!=null ) {
+                    xrefs.addAll(Arrays.asList(a.getXrefSource().split("[\\|,;]")));
+                }
+                mergedA.setXrefSource(Utils.concatenate(xrefs,"|"));
+            }
+        }
+
+        List<Annotation> mergedAnnotList = new ArrayList<>(mergedAnnots.values());
+        log.info("   merged annot count = "+mergedAnnotList.size());
+        return mergedAnnotList;
+    }
+
+    String getMergeKey(Annotation a) {
+        return a.getAnnotatedObjectRgdId()+"|"+a.getTermAcc()+"|"+a.getDataSrc()+"|"+a.getEvidence()
+                +a.getRefRgdId()+"|"+a.getCreatedBy()+"|"+Utils.defaultString(a.getQualifier())
+                +"|"+a.getNotes();
     }
 }
