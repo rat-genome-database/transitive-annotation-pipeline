@@ -66,12 +66,12 @@ public class AnnotCache {
                 // merge WITH_INFO field
                 Set<String> xrefs;
                 if( a.getXrefSource()!=null ) {
-                    xrefs = new TreeSet<>(Arrays.asList(a.getXrefSource().split("[\\|,;]")));
+                    xrefs = new TreeSet<>(Arrays.asList(a.getXrefSource().split("[\\|\\,\\;]")));
                 } else {
                     xrefs = new TreeSet<>();
                 }
                 if( mergedA.getXrefSource()!=null ) {
-                    xrefs.addAll(Arrays.asList(a.getXrefSource().split("[\\|,;]")));
+                    xrefs.addAll(Arrays.asList(mergedA.getXrefSource().split("[\\|\\,\\;]")));
                 }
                 mergedA.setXrefSource(Utils.concatenate(xrefs,"|"));
             }
