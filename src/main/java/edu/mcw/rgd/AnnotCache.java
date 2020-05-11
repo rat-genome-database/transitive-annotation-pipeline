@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AnnotCache {
 
+    Logger log = Logger.getLogger("core");
+
     public AnnotCache(int speciesTypeKey) {
         this.speciesTypeKey = speciesTypeKey;
     }
@@ -26,9 +28,10 @@ public class AnnotCache {
         incomingAnnots.add(a);
     }
 
-    public void qcAndLoadAnnots(DAO dao) {
+    public void qcAndLoadAnnots(DAO dao) throws CloneNotSupportedException {
 
         List<Annotation> mergedAnnots = mergeIncomingAnnots();
+        Collections.shuffle(mergedAnnots); // randomize annots to minimize risk of conflicts in parallel processing
 
         mergedAnnots.parallelStream().forEach( a -> {
 
@@ -41,6 +44,7 @@ public class AnnotCache {
                     upToDateFullAnnotKeys.put(fullAnnotKey, 0);
                 }
             } catch(Exception e) {
+                log.warn("PROBLEMATIC ANNOT=  "+a.dump("|"));
                 throw new RuntimeException(e);
             }
         });
@@ -51,10 +55,9 @@ public class AnnotCache {
      * Per RGD strategy, we can safely merge these annots into a single one, with its WITH_INFO field being an aggregate of WITH_INFO field
      * from source annotations.
      */
-    List<Annotation> mergeIncomingAnnots() {
+    List<Annotation> mergeIncomingAnnots() throws CloneNotSupportedException {
 
-        Logger log = Logger.getLogger("core");
-        log.info("   incoming annot count = "+incomingAnnots.size());
+        log.info("   incoming annot count = "+Utils.formatThousands(incomingAnnots.size()));
 
         Map<String, Annotation> mergedAnnots = new HashMap<>();
         for( Annotation a: incomingAnnots ) {
@@ -78,13 +81,48 @@ public class AnnotCache {
         }
 
         List<Annotation> mergedAnnotList = new ArrayList<>(mergedAnnots.values());
-        log.info("   merged annot count = "+mergedAnnotList.size());
+
+        splitAnnots(mergedAnnotList);
+        log.info("   merged annot count = "+Utils.formatThousands(mergedAnnotList.size()));
         return mergedAnnotList;
+    }
+
+    void splitAnnots(List<Annotation> annots) throws CloneNotSupportedException {
+
+        // XREF_SOURCE field cannot be longer than 4000 chars; if it is longer, it must be split into multiple annotations
+        List<Annotation> annotSplits = new ArrayList<>();
+
+        for( Annotation a: annots ) {
+            if( a.getXrefSource()==null ) {
+                continue;
+            }
+
+            while( a.getXrefSource().length()>4000 ) {
+                int splitPos = a.getXrefSource().lastIndexOf("|", 4000);
+                String goodXrefSrc = a.getXrefSource().substring(0, splitPos);
+                Annotation a2 = (Annotation) a.clone();
+                a2.setXrefSource(goodXrefSrc);
+                annotSplits.add(a2);
+                a.setXrefSource(a.getXrefSource().substring(splitPos+1));
+
+                if(false) { // dbg
+                    log.warn("===");
+                    log.warn("SPLIT1 " + a2.dump("|"));
+                    log.warn("SPLIT2 " + a.dump("|"));
+                    log.warn("===");
+                }
+            }
+        }
+
+        if( !annotSplits.isEmpty() ) {
+            log.info("   merged annot splits = "+Utils.formatThousands(annotSplits.size()));
+            annots.addAll(annotSplits);
+        }
     }
 
     String getMergeKey(Annotation a) {
         return a.getAnnotatedObjectRgdId()+"|"+a.getTermAcc()+"|"+a.getDataSrc()+"|"+a.getEvidence()
-                +a.getRefRgdId()+"|"+a.getCreatedBy()+"|"+Utils.defaultString(a.getQualifier())
+                +"|"+a.getRefRgdId()+"|"+a.getCreatedBy()+"|"+Utils.defaultString(a.getQualifier())
                 +"|"+a.getNotes();
     }
 }

@@ -1,5 +1,6 @@
 May 11, 2020
   -merging of similar annotations differing only by XREF_SOURCE field
+   (note: such merged annots must be split if length of XREF_SRC is > 4000 due to Oracle limitations)
 
 Feb 20, 2020
   -fixed problem with incorrect rgd ids in WITH field
