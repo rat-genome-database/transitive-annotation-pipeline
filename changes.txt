@@ -1,3 +1,6 @@
+May 11, 2020
+  -refactored code without changing logic (to be able to merge similar ClinVar annotations in the future)
+
 Feb 20, 2020
   -fixed problem with incorrect rgd ids in WITH field
 

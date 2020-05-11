@@ -12,8 +12,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author mtutaj
@@ -89,7 +87,7 @@ public class Manager {
 
         log.debug("processing annotations for Human-"+species+" orthologs");
 
-        AnnotInfo info = new AnnotInfo(speciesTypeKey);
+        AnnotCache info = new AnnotCache(speciesTypeKey);
         List<Ortholog> orthologs = dao.getAllOrthologs(SpeciesType.HUMAN, speciesTypeKey);
         Collections.shuffle(orthologs); // randomize orthologs for better parallelism of annotations retrieval
         log.info("Human-"+species+" orthologs loaded: "+Utils.formatThousands(orthologs.size()));
@@ -103,6 +101,8 @@ public class Manager {
                 throw new RuntimeException(e);
             }
         });
+
+        info.qcAndLoadAnnots(dao);
 
         int count = info.droppedGOAnnots.get();
         if( count!=0 ) {
@@ -132,7 +132,7 @@ public class Manager {
         log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
     }
 
-    void handleAnnotations(int humanRgdId, int orthoRgdId, int orthoSpeciesTypeKey, AnnotInfo info) throws Exception {
+    void handleAnnotations(int humanRgdId, int orthoRgdId, int orthoSpeciesTypeKey, AnnotCache info) throws Exception {
 
         List<Annotation> annots = dao.getAnnotations(humanRgdId);
 
@@ -177,13 +177,7 @@ public class Manager {
             a.setLastModifiedBy(getCreatedBy());
             a.setLastModifiedDate(new Date());
 
-            int fullAnnotKey = dao.getAnnotationKey(a);
-            if (fullAnnotKey == 0) {
-                dao.insertAnnotation(a);
-                info.insertedAnnots.incrementAndGet();
-            } else {
-                info.upToDateFullAnnotKeys.put(fullAnnotKey, 0);
-            }
+            info.addIncomingAnnot(a);
         }
     }
 
@@ -223,7 +217,7 @@ public class Manager {
         return count;
     }
 
-    int updateLastModified(AnnotInfo info) throws Exception {
+    int updateLastModified(AnnotCache info) throws Exception {
 
         int rowsUpdated = 0;
 
@@ -295,19 +289,6 @@ public class Manager {
 
     public String getEvidenceCode() {
         return evidenceCode;
-    }
-
-    class AnnotInfo {
-
-        public AnnotInfo(int speciesTypeKey) {
-            this.speciesTypeKey = speciesTypeKey;
-        }
-
-        public AtomicInteger insertedAnnots = new AtomicInteger(0);
-        public AtomicInteger droppedGOAnnots = new AtomicInteger(0);
-        public int speciesTypeKey; // species type key for ortholog species
-        // we store them in a map to avoid multiple updates
-        public ConcurrentHashMap<Integer, Object> upToDateFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
     }
 }
 
