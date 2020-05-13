@@ -1,3 +1,6 @@
+May 13, 2020
+  -fixed problem with GO annotations not being created for squirrel, vervet and molerat -- per RGDD-1770, RGDD-1771
+
 May 11, 2020
   -merging of similar annotations differing only by XREF_SOURCE field
    (note: such merged annots must be split if length of XREF_SRC is > 4000 due to Oracle limitations)

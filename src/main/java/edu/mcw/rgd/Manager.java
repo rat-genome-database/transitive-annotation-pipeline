@@ -134,7 +134,9 @@ public class Manager {
 
     void handleAnnotations(int humanRgdId, int orthoRgdId, int orthoSpeciesTypeKey, AnnotCache info) throws Exception {
 
-        List<Annotation> annots = dao.getAnnotations(humanRgdId);
+        // since dao.getAnnotations() is caching the data for performance reasons
+        // we must create an an array copy to be able to modify the annotation list
+        List<Annotation> annots = new ArrayList<>(dao.getAnnotations(humanRgdId));
 
         // hack for DOG,PIG -- DOG,PIG have its GO annotations loaded via MAH GO pipeline
         //  no need to create duplicate transitive orthologs
