@@ -52,7 +52,7 @@
                 <value>HEP</value>
             </list>
         </property>
-        <property name="speciesProcessed" >
+        <property name="processedSpecies" >
             <list>
                 <value>rat</value>
                 <value>mouse</value>
