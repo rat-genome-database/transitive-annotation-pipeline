@@ -6,6 +6,7 @@ import edu.mcw.rgd.dao.impl.XdbIdDAO;
 import edu.mcw.rgd.datamodel.Ortholog;
 import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
+import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -43,6 +44,23 @@ public class DAO {
         return orthologDAO.getAllOrthologs(speciesTypeKey1, speciesTypeKey2);
     }
 
+    synchronized public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
+        List<Ortholog> orthos = _orthoCache.get(rgdId);
+        if( orthos==null ) {
+            orthos = orthologDAO.getOrthologsForSourceRgdId(rgdId);
+            _orthoCache.put(rgdId, orthos);
+
+            Iterator<Ortholog> it = orthos.iterator();
+            while( it.hasNext() ) {
+                Ortholog o = it.next();
+                if( !allowedSpeciesTypeKeys.contains(o.getDestSpeciesTypeKey()) ) {
+                    it.remove();
+                }
+            }
+        }
+        return orthos;
+    }
+    Map<Integer, List<Ortholog>> _orthoCache = new HashMap<>();
 
     public List<XdbId> getXdbIdsByRgdId(int xdbKey, int rgdId) throws Exception {
 
@@ -59,6 +77,10 @@ public class DAO {
         // TODO: create an overload in AnnotationDAO: getCountOfAnnotationsByReference(int refRgdId, int speciesTypeKey)
         String query = "SELECT COUNT(*) FROM full_annot a,rgd_ids r WHERE ref_rgd_id=? AND annotated_object_rgd_id=rgd_id AND object_status='ACTIVE' AND species_type_key=?";
         return annotationDAO.getCount(query, refRgdId, speciesTypeKey);
+    }
+
+    public int getAnnotationCount(int refRgdId) throws Exception {
+        return annotationDAO.getCountOfAnnotationsByReference(refRgdId);
     }
 
     /**
@@ -86,6 +108,53 @@ public class DAO {
         return annots;
     }
     static ConcurrentHashMap<Integer, List<Annotation>> _annotCache = new ConcurrentHashMap<>();
+
+    public List<Annotation> getIncomingAnnotations(int refRgdId, String forbiddenAspectClause, String evidenceClause, String speciesClause) throws Exception {
+
+        String sql = ""+
+        "SELECT a.*,i.species_type_key FROM full_annot a,rgd_ids i "+
+        "WHERE rgd_id=annotated_object_rgd_id AND object_key=1 AND object_status='ACTIVE' AND with_info IS NULL "+
+                " AND ref_rgd_id<>?" +
+                " AND aspect NOT IN("+forbiddenAspectClause+")"+
+                " AND evidence IN("+evidenceClause+")"+
+                " AND species_type_key IN("+speciesClause+")";
+        return annotationDAO.executeAnnotationQuery(sql, refRgdId);
+    }
+
+    public int getAnnotationCount(int rgdId, String termAcc, String qualifier) throws Exception {
+
+        String key = rgdId+"|"+termAcc+"|"+qualifier;
+        Integer cnt = _annotCache2.get(key);
+        if( cnt!=null ) {
+            return cnt;
+        }
+
+        List<Annotation> annots = annotationDAO.getAnnotations(rgdId, termAcc);
+        Iterator<Annotation> it = annots.iterator();
+        while( it.hasNext() ) {
+            Annotation a = it.next();
+            if( !Utils.stringsAreEqual(qualifier, a.getQualifier()) ) {
+                it.remove();
+            }
+        }
+        _annotCache2.put(key, annots.size());
+        return annots.size();
+    }
+    static ConcurrentHashMap<String, Integer> _annotCache2 = new ConcurrentHashMap<>();
+
+    public void incrementAnnotationCount(int rgdId, String termAcc, String qualifier) {
+        String key = rgdId+"|"+termAcc+"|"+qualifier;
+        Integer cnt = _annotCache2.get(key);
+        if( cnt==null ) {
+            System.out.println("unexpected null for key "+key);
+            return;
+        }
+        if( cnt!=0 ) {
+            System.out.println("unexpected non-zero for key "+key);
+            return;
+        }
+        _annotCache2.put(key, 1);
+    }
 
     /**
      * get annotation key by a list of values that comprise unique key:
@@ -124,6 +193,25 @@ public class DAO {
     public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, int speciesTypeKey, Logger log) throws Exception{
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, refRgdId, speciesTypeKey);
+        log.debug("  stale annots found = "+staleAnnots.size());
+        if( staleAnnots.isEmpty() ) {
+            return 0;
+        }
+
+        List<Integer> keys = new ArrayList<>(staleAnnots.size());
+        for( Annotation a: staleAnnots ) {
+            logDeleted.debug(a.dump("|"));
+            keys.add(a.getKey());
+        }
+
+        int rws = annotationDAO.deleteAnnotations(keys);
+        log.debug("  stale annots deleted = "+rws);
+        return rws;
+    }
+
+    public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, Logger log) throws Exception{
+
+        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, refRgdId);
         log.debug("  stale annots found = "+staleAnnots.size());
         if( staleAnnots.isEmpty() ) {
             return 0;

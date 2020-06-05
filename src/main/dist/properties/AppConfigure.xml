@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="manager" class="edu.mcw.rgd.Manager">
-        <property name="version" value="Transitive Annotation pipeline  -- build May 13, 2020" />
+        <property name="version" value="Transitive Annotation pipeline  -- build Jun 04, 2020" />
         <property name="pipelineName" value="Transitive Annotation Pipeline" />
         <property name="createdBy" value="67" />
         <property name="refRgdId" value="9068941" />
@@ -27,6 +27,30 @@
                 <value>H</value> <!-- HPO -->
                 <value>N</value> <!-- MP -->
             </set>
+        </property>
+    </bean>
+
+    <bean id="loader" class="edu.mcw.rgd.Loader">
+        <property name="version" value="Transitive Annotation pipeline  -- build Jun 4, 2020" />
+        <property name="createdBy" value="67" />
+        <property name="refRgdId" value="9068941"/><!--2298974 - test reference -->
+        <property name="dao" ref="dao"/>
+        <property name="evidenceCode" value="ISO" /><!-- evidence code for generated transitive annotations -->
+        <property name="inputEvidenceCodes"><!-- evidence codes for source manual annotations -->
+            <list>
+                <value>EXP</value>
+                <value>IDA</value>
+                <value>IPI</value>
+                <value>IMP</value>
+                <value>IGI</value>
+                <value>IEP</value>
+                <value>IAGP</value>
+                <value>HTP</value>
+                <value>HAD</value>
+                <value>HMP</value>
+                <value>HGI</value>
+                <value>HEP</value>
+            </list>
         </property>
     </bean>
 </beans>

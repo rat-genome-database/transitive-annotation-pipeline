@@ -9,8 +9,8 @@ Notes:
 
 3. WITH_INFO field rules
 
-  1. if WITH_INFO for human gene is null, set it to 'RGD:<human-gene-rgd-id>'
+  3.1 if WITH_INFO for human gene is null, set it to 'RGD:<human-gene-rgd-id>'
 
-  2. if WITH_INFO for human gene is not null, and evidence code is one of {'ISS','ISO'}, set it to WITH_INFO from human annotation
+  b. if WITH_INFO for human gene is not null, and evidence code is one of {'ISS','ISO'}, set it to WITH_INFO from human annotation
 
-  3. if WITH_INFO for human gene is not null, and evidence code is other than {'ISS','ISO'}, set it to 'RGD:<human-gene-rgd-id>'
+  c. if WITH_INFO for human gene is not null, and evidence code is other than {'ISS','ISO'}, set it to 'RGD:<human-gene-rgd-id>'

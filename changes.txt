@@ -1,3 +1,8 @@
+Jun 5, 2020
+  -rewrote the pipeline logic
+    previously the incoming annotations were human annotations for all ontologies except phenotype and chebi
+    now: the incoming annotations are all manual annotations with evidence codes explicitly given in config file
+
 May 13, 2020
   -fixed problem with GO annotations not being created for squirrel, vervet and molerat -- per RGDD-1770, RGDD-1771
 

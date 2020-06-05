@@ -10,15 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AnnotCache {
 
-    Logger log = Logger.getLogger("core");
-
-    public AnnotCache(int speciesTypeKey) {
-        this.speciesTypeKey = speciesTypeKey;
-    }
+    Logger log = Logger.getLogger("isoStatus");
 
     public AtomicInteger insertedAnnots = new AtomicInteger(0);
-    public AtomicInteger droppedGOAnnots = new AtomicInteger(0);
-    public int speciesTypeKey; // species type key for ortholog species
     // we store them in a map to avoid multiple updates
     public ConcurrentHashMap<Integer, Object> upToDateFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
 
@@ -33,15 +27,23 @@ public class AnnotCache {
         List<Annotation> mergedAnnots = mergeIncomingAnnots();
         Collections.shuffle(mergedAnnots); // randomize annots to minimize risk of conflicts in parallel processing
 
-        mergedAnnots.parallelStream().forEach( a -> {
+        AtomicInteger i = new AtomicInteger(0);
+        mergedAnnots.stream().forEach( a -> {
 
+            if( i.incrementAndGet()%10000==0 ) {
+                System.out.println(i+"/"+mergedAnnots.size());
+            }
             try {
-                int fullAnnotKey = dao.getAnnotationKey(a);
-                if (fullAnnotKey == 0) {
+                int annotCountInRgd = dao.getAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
+                if (annotCountInRgd == 0) {
                     dao.insertAnnotation(a);
+                    dao.incrementAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
                     insertedAnnots.incrementAndGet();
                 } else {
-                    upToDateFullAnnotKeys.put(fullAnnotKey, 0);
+                    int fullAnnotKey = dao.getAnnotationKey(a);
+                    if( fullAnnotKey!=0 ) {
+                        upToDateFullAnnotKeys.put(fullAnnotKey, 0);
+                    }
                 }
             } catch(Exception e) {
                 log.warn("PROBLEMATIC ANNOT=  "+a.dump("|"));
@@ -123,6 +125,7 @@ public class AnnotCache {
     String getMergeKey(Annotation a) {
         return a.getAnnotatedObjectRgdId()+"|"+a.getTermAcc()+"|"+a.getDataSrc()+"|"+a.getEvidence()
                 +"|"+a.getRefRgdId()+"|"+a.getCreatedBy()+"|"+Utils.defaultString(a.getQualifier())
-                +"|"+a.getNotes();
+                +"|"+a.getWithInfo()+"|"+a.getNotes();
     }
+
 }

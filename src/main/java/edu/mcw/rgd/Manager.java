@@ -38,16 +38,22 @@ public class Manager {
 
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
-        Manager manager = (Manager) (bf.getBean("manager"));
 
+        Manager manager = (Manager) (bf.getBean("manager"));
+        Loader loader = (Loader) (bf.getBean("loader"));
         try {
-            manager.run();
+            loader.run();
+
+            // old code: discontinued
+            //manager.run();
         } catch (Exception e) {
-            manager.log.error(e);
+            Utils.printStackTrace(e, loader.log);
+            //manager.log.error(e);
             throw e;
         }
     }
 
+    /*
     public void run() throws Exception {
         Date dateStart = new Date();
         log.info(getVersion());
@@ -236,7 +242,7 @@ public class Manager {
 
         return rowsUpdated;
     }
-
+*/
     public DAO getDao() {
         return dao;
     }
