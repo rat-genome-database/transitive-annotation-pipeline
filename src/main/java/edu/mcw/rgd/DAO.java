@@ -33,16 +33,11 @@ public class DAO {
         return xdao.getConnectionInfo();
     }
 
-    /**
-     * get all active gene orthologs for given pair of species
-     * @param speciesTypeKey1 species type key for first species
-     * @param speciesTypeKey2 species type key for second species
-     * @return List of Ortholog objects
-     * @throws Exception when unexpected error in spring framework occurs
-     */
+    /*
     public List<Ortholog> getAllOrthologs(int speciesTypeKey1, int speciesTypeKey2) throws Exception {
         return orthologDAO.getAllOrthologs(speciesTypeKey1, speciesTypeKey2);
     }
+     */
 
     synchronized public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
         List<Ortholog> orthos = _orthoCache.get(rgdId);
@@ -72,12 +67,12 @@ public class DAO {
      * @param refRgdId reference rgd id for Transitive Annotation Pipeline
      * @param speciesTypeKey species type key
      * @return count of annotations created by the pipeline for given species
-     */
     public int getAnnotationCount(int refRgdId, int speciesTypeKey) throws Exception {
         // TODO: create an overload in AnnotationDAO: getCountOfAnnotationsByReference(int refRgdId, int speciesTypeKey)
         String query = "SELECT COUNT(*) FROM full_annot a,rgd_ids r WHERE ref_rgd_id=? AND annotated_object_rgd_id=rgd_id AND object_status='ACTIVE' AND species_type_key=?";
         return annotationDAO.getCount(query, refRgdId, speciesTypeKey);
     }
+     */
 
     public int getAnnotationCount(int refRgdId) throws Exception {
         return annotationDAO.getCountOfAnnotationsByReference(refRgdId);
@@ -88,7 +83,6 @@ public class DAO {
      * @param rgdId annotated object rgd id
      * @return list of Annotation objects
      * @throws Exception on spring framework dao failure
-     */
     public List<Annotation> getAnnotations(int rgdId) throws Exception {
 
         List<Annotation> annots = _annotCache.get(rgdId);
@@ -108,6 +102,7 @@ public class DAO {
         return annots;
     }
     static ConcurrentHashMap<Integer, List<Annotation>> _annotCache = new ConcurrentHashMap<>();
+     */
 
     public List<Annotation> getIncomingAnnotations(int refRgdId, String forbiddenAspectClause, String evidenceClause, String speciesClause) throws Exception {
 
@@ -189,7 +184,6 @@ public class DAO {
      *
      * @return number of rows affected
      * @throws Exception on spring framework dao failure
-     */
     public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, int speciesTypeKey, Logger log) throws Exception{
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, refRgdId, speciesTypeKey);
@@ -208,6 +202,7 @@ public class DAO {
         log.debug("  stale annots deleted = "+rws);
         return rws;
     }
+     */
 
     public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, Logger log) throws Exception{
 

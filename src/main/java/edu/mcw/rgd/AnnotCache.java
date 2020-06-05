@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AnnotCache {
 
-    Logger log = Logger.getLogger("isoStatus");
+    Logger log = Logger.getLogger("core");
 
     public AtomicInteger insertedAnnots = new AtomicInteger(0);
     // we store them in a map to avoid multiple updates
@@ -27,17 +27,18 @@ public class AnnotCache {
         List<Annotation> mergedAnnots = mergeIncomingAnnots();
         Collections.shuffle(mergedAnnots); // randomize annots to minimize risk of conflicts in parallel processing
 
-        AtomicInteger i = new AtomicInteger(0);
-        mergedAnnots.stream().forEach( a -> {
+        mergedAnnots.parallelStream().forEach( a -> {
 
-            if( i.incrementAndGet()%10000==0 ) {
-                System.out.println(i+"/"+mergedAnnots.size());
-            }
             try {
-                int annotCountInRgd = dao.getAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
+                int annotCountInRgd;
+                synchronized (this) {
+                    annotCountInRgd = dao.getAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
+                    if (annotCountInRgd == 0) {
+                        dao.incrementAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
+                    }
+                }
                 if (annotCountInRgd == 0) {
                     dao.insertAnnotation(a);
-                    dao.incrementAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
                     insertedAnnots.incrementAndGet();
                 } else {
                     int fullAnnotKey = dao.getAnnotationKey(a);
