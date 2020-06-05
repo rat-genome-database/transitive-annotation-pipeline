@@ -139,4 +139,9 @@ public class AnnotCache {
                 +"|"+a.getWithInfo()+"|"+a.getNotes();
     }
 
+    public void clear() {
+        insertedAnnots.set(0);
+        upToDateFullAnnotKeys.clear();
+        incomingAnnots.clear();
+    }
 }

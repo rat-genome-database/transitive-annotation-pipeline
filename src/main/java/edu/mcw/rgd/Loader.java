@@ -56,6 +56,9 @@ public class Loader {
         // update last modified date for matching annots in batches
         updateLastModified(annotCache);
 
+        annotCache.clear();
+        annotCache = null;
+
         log.debug("deleting stale annotations...");
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), log);
         if( annotDeleted!=0 ) {
@@ -78,7 +81,7 @@ public class Loader {
     AnnotCache processIncomingAnnotations() throws Exception {
 
         List<Annotation> incomingAnnotations = getIncomingAnnotations();
-        log.info("incoming manual gene annotations: "+incomingAnnotations.size());
+        log.info("incoming manual gene annotations: "+Utils.formatThousands(incomingAnnotations.size()));
 
         AnnotCache annotCache = new AnnotCache();
 
@@ -148,6 +151,9 @@ public class Loader {
         String speciesClause = Utils.buildInPhrase(processedSpeciesTypeKeys);
         String forbiddenAspectClause = Utils.buildInPhraseQuoted(dao.getExcludedOntologyAspects());
         String evidenceClause = Utils.buildInPhraseQuoted(getInputEvidenceCodes());
+
+        log.info("processed species: "+Utils.concatenate(getProcessedSpecies(), ", "));
+        log.info("processed manual evidence codes: "+Utils.concatenate(getInputEvidenceCodes(), ", "));
 
         return dao.getIncomingAnnotations(getRefRgdId(), forbiddenAspectClause, evidenceClause, speciesClause);
     }
