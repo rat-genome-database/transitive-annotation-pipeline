@@ -33,12 +33,6 @@ public class DAO {
         return xdao.getConnectionInfo();
     }
 
-    /*
-    public List<Ortholog> getAllOrthologs(int speciesTypeKey1, int speciesTypeKey2) throws Exception {
-        return orthologDAO.getAllOrthologs(speciesTypeKey1, speciesTypeKey2);
-    }
-     */
-
     synchronized public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
         List<Ortholog> orthos = _orthoCache.get(rgdId);
         if( orthos==null ) {
@@ -61,18 +55,6 @@ public class DAO {
 
         return xdao.getXdbIdsByRgdId(xdbKey, rgdId);
     }
-
-    /**
-     * get count of annotations created by the pipeline for given species
-     * @param refRgdId reference rgd id for Transitive Annotation Pipeline
-     * @param speciesTypeKey species type key
-     * @return count of annotations created by the pipeline for given species
-    public int getAnnotationCount(int refRgdId, int speciesTypeKey) throws Exception {
-        // TODO: create an overload in AnnotationDAO: getCountOfAnnotationsByReference(int refRgdId, int speciesTypeKey)
-        String query = "SELECT COUNT(*) FROM full_annot a,rgd_ids r WHERE ref_rgd_id=? AND annotated_object_rgd_id=rgd_id AND object_status='ACTIVE' AND species_type_key=?";
-        return annotationDAO.getCount(query, refRgdId, speciesTypeKey);
-    }
-     */
 
     public int getAnnotationCount(int refRgdId) throws Exception {
         return annotationDAO.getCountOfAnnotationsByReference(refRgdId);
@@ -116,7 +98,7 @@ public class DAO {
         return annotationDAO.executeAnnotationQuery(sql, refRgdId);
     }
 
-    public int getAnnotationCount(int rgdId, String termAcc, String qualifier) throws Exception {
+    public int getAnnotationCount(int rgdId, String termAcc, String qualifier, int refRgdId) throws Exception {
 
         String key = rgdId+"|"+termAcc+"|"+qualifier;
         Integer cnt = _annotCache2.get(key);
@@ -128,6 +110,10 @@ public class DAO {
         Iterator<Annotation> it = annots.iterator();
         while( it.hasNext() ) {
             Annotation a = it.next();
+            if( refRgdId==a.getRefRgdId() ) {
+                it.remove();
+                continue;
+            }
             if( !Utils.stringsAreEqual(qualifier, a.getQualifier()) ) {
                 it.remove();
             }
@@ -136,20 +122,6 @@ public class DAO {
         return annots.size();
     }
     static ConcurrentHashMap<String, Integer> _annotCache2 = new ConcurrentHashMap<>();
-
-    public void incrementAnnotationCount(int rgdId, String termAcc, String qualifier) {
-        String key = rgdId+"|"+termAcc+"|"+qualifier;
-        Integer cnt = _annotCache2.get(key);
-        if( cnt==null ) {
-            System.out.println("unexpected null for key "+key);
-            return;
-        }
-        if( cnt!=0 ) {
-            System.out.println("unexpected non-zero for key "+key);
-            return;
-        }
-        _annotCache2.put(key, 1);
-    }
 
     /**
      * get annotation key by a list of values that comprise unique key:

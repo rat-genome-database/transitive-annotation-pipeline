@@ -52,5 +52,19 @@
                 <value>HEP</value>
             </list>
         </property>
+        <property name="speciesProcessed" >
+            <list>
+                <value>rat</value>
+                <value>mouse</value>
+                <value>human</value>
+                <value>bonobo</value>
+                <value>chinchilla</value>
+                <value>dog</value>
+                <value>squirrel</value>
+                <value>pig</value>
+                <value>vervet</value>
+                <value>molerat</value>
+            </list>
+        </property>
     </bean>
 </beans>

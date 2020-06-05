@@ -22,35 +22,45 @@ public class AnnotCache {
         incomingAnnots.add(a);
     }
 
-    public void qcAndLoadAnnots(DAO dao) throws CloneNotSupportedException {
+    public void qcAndLoadAnnots(DAO dao) throws Exception {
 
         List<Annotation> mergedAnnots = mergeIncomingAnnots();
-        Collections.shuffle(mergedAnnots); // randomize annots to minimize risk of conflicts in parallel processing
 
-        mergedAnnots.parallelStream().forEach( a -> {
+        List<Annotation> uniqueAnnots = getAnnotsWithoutDuplicates(dao, mergedAnnots);
+
+        uniqueAnnots.parallelStream().forEach( a -> {
 
             try {
-                int annotCountInRgd;
-                synchronized (this) {
-                    annotCountInRgd = dao.getAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
-                    if (annotCountInRgd == 0) {
-                        dao.incrementAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier());
-                    }
-                }
-                if (annotCountInRgd == 0) {
+                int fullAnnotKey = dao.getAnnotationKey(a);
+                if (fullAnnotKey == 0) {
                     dao.insertAnnotation(a);
                     insertedAnnots.incrementAndGet();
                 } else {
-                    int fullAnnotKey = dao.getAnnotationKey(a);
-                    if( fullAnnotKey!=0 ) {
-                        upToDateFullAnnotKeys.put(fullAnnotKey, 0);
-                    }
+                    upToDateFullAnnotKeys.put(fullAnnotKey, 0);
                 }
             } catch(Exception e) {
                 log.warn("PROBLEMATIC ANNOT=  "+a.dump("|"));
                 throw new RuntimeException(e);
             }
         });
+
+    }
+
+    List<Annotation> getAnnotsWithoutDuplicates(DAO dao, List<Annotation> mergedAnnots) throws Exception {
+
+        List<Annotation> uniqueAnnots = new ArrayList<>();
+
+        for( Annotation a: mergedAnnots ) {
+
+            int annotCountInRgd = dao.getAnnotationCount(a.getAnnotatedObjectRgdId(), a.getTermAcc(), a.getQualifier(), a.getRefRgdId());
+            if( annotCountInRgd==0 ) {
+                uniqueAnnots.add(a);
+            }
+        }
+
+        mergedAnnots.clear();
+
+        return uniqueAnnots;
     }
 
     /**

@@ -11,7 +11,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Loader {
 
@@ -21,6 +20,7 @@ public class Loader {
     private String evidenceCode;
     private DAO dao;
     private List<String> inputEvidenceCodes;
+    private List<String> processedSpecies;
     private Set<Integer> processedSpeciesTypeKeys;
 
     Logger log = Logger.getLogger("core");
@@ -37,16 +37,48 @@ public class Loader {
 
         // limit species to searchable species
         processedSpeciesTypeKeys = new HashSet<>();
-        for( int sp: SpeciesType.getSpeciesTypeKeys() ) {
-            if( SpeciesType.isSearchable(sp) ) {
-                processedSpeciesTypeKeys.add(sp);
-            }
+        for( String sp: getProcessedSpecies() ) {
+            processedSpeciesTypeKeys.add(SpeciesType.parse(sp));
         }
+
+        int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
+
+        AnnotCache annotCache = processIncomingAnnotations();
+
+        // qc incoming annots to determine annots for insertion / deletion
+        annotCache.qcAndLoadAnnots(dao);
+
+        int count = annotCache.insertedAnnots.get();
+        if( count!=0 ) {
+            log.info("annotations inserted: " + Utils.formatThousands(count));
+        }
+
+        // update last modified date for matching annots in batches
+        updateLastModified(annotCache);
+
+        log.debug("deleting stale annotations...");
+        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), log);
+        if( annotDeleted!=0 ) {
+            log.info("annotations deleted : " + Utils.formatThousands(annotDeleted));
+        }
+
+        int newAnnotCount = dao.getAnnotationCount(getRefRgdId());
+
+        log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted)+"    (last-modified-date updated)");
+
+        NumberFormat plusMinusNF = new DecimalFormat(" +###,###,###; -###,###,###");
+        int diffAnnotCount = newAnnotCount - origAnnotCount;
+        String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
+        log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
+
+        log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
+        log.info("");
+    }
+
+    AnnotCache processIncomingAnnotations() throws Exception {
 
         List<Annotation> incomingAnnotations = getIncomingAnnotations();
         log.info("incoming manual gene annotations: "+incomingAnnotations.size());
-
-        int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
 
         AnnotCache annotCache = new AnnotCache();
 
@@ -86,35 +118,7 @@ public class Loader {
                 throw new RuntimeException(e);
             }
         });
-
-
-        annotCache.qcAndLoadAnnots(dao);
-
-        int count = annotCache.insertedAnnots.get();
-        if( count!=0 ) {
-            log.info("annotations inserted: " + Utils.formatThousands(count));
-        }
-
-        // update last modified date for matching annots in batches
-        updateLastModified(annotCache);
-
-        log.debug("deleting stale annotations...");
-        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), log);
-        if( annotDeleted!=0 ) {
-            log.info("annotations deleted : " + Utils.formatThousands(annotDeleted));
-        }
-
-        int newAnnotCount = dao.getAnnotationCount(getRefRgdId());
-
-        log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted)+"    (last-modified-date updated)");
-
-        NumberFormat plusMinusNF = new DecimalFormat(" +###,###,###; -###,###,###");
-        int diffAnnotCount = newAnnotCount - origAnnotCount;
-        String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
-        log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
-
-        log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
-        log.info("");
+        return annotCache;
     }
 
     void populateXRefSource(Annotation a) throws Exception {
@@ -208,5 +212,13 @@ public class Loader {
 
     public List<String> getInputEvidenceCodes() {
         return inputEvidenceCodes;
+    }
+
+    public void setProcessedSpecies(List<String> processedSpecies) {
+        this.processedSpecies = processedSpecies;
+    }
+
+    public List<String> getProcessedSpecies() {
+        return processedSpecies;
     }
 }

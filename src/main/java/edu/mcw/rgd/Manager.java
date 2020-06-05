@@ -1,23 +1,18 @@
 package edu.mcw.rgd;
 
-import edu.mcw.rgd.datamodel.*;
-import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * @author mtutaj
  * @since Dec 12, 2017
- * based on human orthologs and human gene annotations,
- *    create ISS annotations for chinchilla, squirrel, bonobo, dog and pig
+ * based on manual gene annotations,
+ *    create ISO annotations for all species based on orthology
  *    for all ontologies except CHEBI, MP and HP
  */
 public class Manager {
@@ -31,8 +26,6 @@ public class Manager {
     private String evidenceCode;
 
     Logger log = Logger.getLogger("core");
-
-    NumberFormat plusMinusNF = new DecimalFormat(" +###,###,###; -###,###,###");
 
     public static void main(String[] args) throws Exception {
 
@@ -225,23 +218,6 @@ public class Manager {
         return count;
     }
 
-    int updateLastModified(AnnotCache info) throws Exception {
-
-        int rowsUpdated = 0;
-
-        // do the updates in batches of 999, because Oracle has an internal limit of 1000
-        List<Integer> fullAnnotKeys = new ArrayList<>(info.upToDateFullAnnotKeys.keySet());
-        for( int i=0; i<fullAnnotKeys.size(); i+= 999 ) {
-            int j = i + 999;
-            if( j > fullAnnotKeys.size() ) {
-                j = fullAnnotKeys.size();
-            }
-            List<Integer> fullAnnotKeysSubset = fullAnnotKeys.subList(i, j);
-            rowsUpdated += dao.updateLastModified(fullAnnotKeysSubset);
-        }
-
-        return rowsUpdated;
-    }
 */
     public DAO getDao() {
         return dao;
