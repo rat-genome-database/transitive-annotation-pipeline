@@ -60,37 +60,11 @@ public class DAO {
         return annotationDAO.getCountOfAnnotationsByReference(refRgdId);
     }
 
-    /**
-     * get annotations by annotated object rgd id; skip CHEBI, HP and MP annotations
-     * @param rgdId annotated object rgd id
-     * @return list of Annotation objects
-     * @throws Exception on spring framework dao failure
-    public List<Annotation> getAnnotations(int rgdId) throws Exception {
-
-        List<Annotation> annots = _annotCache.get(rgdId);
-        if( annots!=null ) {
-            return annots;
-        }
-
-        annots = annotationDAO.getAnnotations(rgdId);
-        Iterator<Annotation> it = annots.iterator();
-        while( it.hasNext() ) {
-            Annotation a = it.next();
-            if( getExcludedOntologyAspects().contains(a.getAspect()) ) {
-                it.remove();
-            }
-        }
-        _annotCache.put(rgdId, annots);
-        return annots;
-    }
-    static ConcurrentHashMap<Integer, List<Annotation>> _annotCache = new ConcurrentHashMap<>();
-     */
-
     public List<Annotation> getIncomingAnnotations(int refRgdId, String forbiddenAspectClause, String evidenceClause, String speciesClause) throws Exception {
 
         String sql = ""+
         "SELECT a.*,i.species_type_key FROM full_annot a,rgd_ids i "+
-        "WHERE rgd_id=annotated_object_rgd_id AND object_key=1 AND object_status='ACTIVE' AND with_info IS NULL "+
+        "WHERE rgd_id=annotated_object_rgd_id AND object_key=1 AND object_status='ACTIVE' "+
                 " AND ref_rgd_id<>?" +
                 " AND aspect NOT IN("+forbiddenAspectClause+")"+
                 " AND evidence IN("+evidenceClause+")"+

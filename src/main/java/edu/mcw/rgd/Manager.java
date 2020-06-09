@@ -20,10 +20,7 @@ public class Manager {
     private DAO dao;
     private String version;
     private String pipelineName;
-    private int createdBy;
-    private int refRgdId;
     private List<String> speciesProcessed;
-    private String evidenceCode;
 
     Logger log = Logger.getLogger("core");
 
@@ -243,36 +240,12 @@ public class Manager {
         return pipelineName;
     }
 
-    public void setCreatedBy(int createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public int getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setRefRgdId(int refRgdId) {
-        this.refRgdId = refRgdId;
-    }
-
-    public int getRefRgdId() {
-        return refRgdId;
-    }
-
     public List<String> getSpeciesProcessed() {
         return speciesProcessed;
     }
 
     public void setSpeciesProcessed(List<String> speciesProcessed) {
         this.speciesProcessed = speciesProcessed;
-    }
-
-    public void setEvidenceCode(String evidenceCode) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public String getEvidenceCode() {
-        return evidenceCode;
     }
 }
 

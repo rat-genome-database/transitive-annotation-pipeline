@@ -1,3 +1,6 @@
+Jun 9, 2020
+  -fixed sql for incoming source annotations
+
 Jun 5, 2020
   -rewrote the pipeline logic
     previously the incoming annotations were human annotations for all ontologies except phenotype and chebi

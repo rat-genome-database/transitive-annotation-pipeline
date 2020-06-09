@@ -1,11 +1,8 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="manager" class="edu.mcw.rgd.Manager">
-        <property name="version" value="Transitive Annotation pipeline  -- build Jun 04, 2020" />
+        <property name="version" value="Transitive Annotation pipeline  -- build Jun 09, 2020" />
         <property name="pipelineName" value="Transitive Annotation Pipeline" />
-        <property name="createdBy" value="67" />
-        <property name="refRgdId" value="9068941" />
-        <property name="evidenceCode" value="ISS" />
         <property name="speciesProcessed" >
             <list>
                 <value>bonobo</value>
@@ -31,7 +28,7 @@
     </bean>
 
     <bean id="loader" class="edu.mcw.rgd.Loader">
-        <property name="version" value="Transitive Annotation pipeline  -- build Jun 4, 2020" />
+        <property name="version" value="Transitive Annotation pipeline  -- build Jun 9, 2020" />
         <property name="createdBy" value="67" />
         <property name="refRgdId" value="9068941"/><!--2298974 - test reference -->
         <property name="dao" ref="dao"/>

@@ -4,7 +4,6 @@
 Create transitive (ISO) annotations for all public species in RGD,
 based on manual annotations as identified by evidence codes 'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'IAGP', 'HTP', 'HAD', 'HMP', 'HGI', 'HEP'
 and based on orthologous genes.
-With_info field of the manual annotation must be empty.
 
 Notes:
 
