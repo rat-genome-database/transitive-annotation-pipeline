@@ -8,9 +8,11 @@ and based on orthologous genes.
 Notes:
 
 1. annotations to CHEBI, HP and MP ontologies are *NOT* processed by the pipeline.
-2. duplicate annotations are not created (if there is another annotation in RGD having the same RGD ID, term accession and qualifier as the transitive annotatation,
+2. PW annotations with TAS evidence code are also used as base for transitive annotations
+   (rule added on Aug 31, 2020)
+3. duplicate annotations are not created (if there is another annotation in RGD having the same RGD ID, term accession and qualifier as the transitive annotatation,
    then the transitive annotation is considered a duplicate and it won't be created).
-3. incoming similar manual annotations are merged
+4. incoming similar manual annotations are merged
   - if there are 2+ incoming annotations that are the same except XREF_SOURCE field,
      then they are merged into one (by merging their XREF_SOURCE fields)
       (note: such merged annots must be split if length of XREF_SRC is > 4000 due to Oracle limitations)

@@ -39,13 +39,7 @@ public class DAO {
             orthos = orthologDAO.getOrthologsForSourceRgdId(rgdId);
             _orthoCache.put(rgdId, orthos);
 
-            Iterator<Ortholog> it = orthos.iterator();
-            while( it.hasNext() ) {
-                Ortholog o = it.next();
-                if( !allowedSpeciesTypeKeys.contains(o.getDestSpeciesTypeKey()) ) {
-                    it.remove();
-                }
-            }
+            orthos.removeIf(o -> !allowedSpeciesTypeKeys.contains(o.getDestSpeciesTypeKey()));
         }
         return orthos;
     }
@@ -67,7 +61,8 @@ public class DAO {
         "WHERE rgd_id=annotated_object_rgd_id AND object_key=1 AND object_status='ACTIVE' "+
                 " AND ref_rgd_id<>?" +
                 " AND aspect NOT IN("+forbiddenAspectClause+")"+
-                " AND evidence IN("+evidenceClause+")"+
+                " AND (evidence IN("+evidenceClause+")"+
+                "   OR (evidence='TAS' AND aspect='W') )"+
                 " AND species_type_key IN("+speciesClause+")";
         return annotationDAO.executeAnnotationQuery(sql, refRgdId);
     }
@@ -124,31 +119,6 @@ public class DAO {
     public int updateLastModified(List<Integer> fullAnnotKeys) throws Exception{
         return annotationDAO.updateLastModified(fullAnnotKeys);
     }
-
-    /**
-     * delete annotations older than passed in date
-     *
-     * @return number of rows affected
-     * @throws Exception on spring framework dao failure
-    public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, int speciesTypeKey, Logger log) throws Exception{
-
-        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, refRgdId, speciesTypeKey);
-        log.debug("  stale annots found = "+staleAnnots.size());
-        if( staleAnnots.isEmpty() ) {
-            return 0;
-        }
-
-        List<Integer> keys = new ArrayList<>(staleAnnots.size());
-        for( Annotation a: staleAnnots ) {
-            logDeleted.debug(a.dump("|"));
-            keys.add(a.getKey());
-        }
-
-        int rws = annotationDAO.deleteAnnotations(keys);
-        log.debug("  stale annots deleted = "+rws);
-        return rws;
-    }
-     */
 
     public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, Logger log) throws Exception{
 
