@@ -154,6 +154,7 @@ public class Loader {
 
         log.info("processed species: "+Utils.concatenate(getProcessedSpecies(), ", "));
         log.info("processed manual evidence codes: "+Utils.concatenate(getInputEvidenceCodes(), ", "));
+        log.info("   AND TAS evidence code for PW annotations");
 
         return dao.getIncomingAnnotations(getRefRgdId(), forbiddenAspectClause, evidenceClause, speciesClause);
     }
