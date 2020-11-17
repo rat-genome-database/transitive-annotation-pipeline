@@ -1,5 +1,6 @@
 Nov 17, 2020
   -renamed java app name to 'transitive-annotation-pipeline' to be the same as github project name
+  -better handling of new fields ANNOTATION_EXTENSION and GENE_PRODUCT_FORM_ID
 
 Aug 31, 2020
   -PW annotations with TAS evidence are also used as base for transitive annotations

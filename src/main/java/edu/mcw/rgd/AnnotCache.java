@@ -136,7 +136,8 @@ public class AnnotCache {
     String getMergeKey(Annotation a) {
         return a.getAnnotatedObjectRgdId()+"|"+a.getTermAcc()+"|"+a.getDataSrc()+"|"+a.getEvidence()
                 +"|"+a.getRefRgdId()+"|"+a.getCreatedBy()+"|"+Utils.defaultString(a.getQualifier())
-                +"|"+a.getWithInfo()+"|"+a.getNotes();
+                +"|"+a.getWithInfo()+"|"+a.getNotes()
+                +"|"+Utils.defaultString(a.getAnnotationExtension())+"|"+Utils.defaultString(a.getQualifier());
     }
 
     public void clear() {
