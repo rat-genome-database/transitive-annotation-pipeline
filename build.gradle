@@ -13,7 +13,7 @@ apply plugin: 'application'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 mainClassName = 'edu.mcw.rgd.Manager'
-String myAppName = 'TransitiveAnnotPipeline'
+String myAppName = 'transitive-annotation-pipeline'
 
 repositories {
     mavenCentral()
@@ -23,8 +23,8 @@ dependencies {
     compile 'org.apache.commons:commons-dbcp2:2.7.0'
     compile 'log4j:log4j:1.2.17'
     compile 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    compile 'org.springframework:spring-beans:5.2.5.RELEASE'
-    compile 'org.springframework:spring-jdbc:5.2.5.RELEASE'
+    compile 'org.springframework:spring-beans:5.2.6.RELEASE'
+    compile 'org.springframework:spring-jdbc:5.2.6.RELEASE'
 
     compile fileTree(dir: 'lib', include: '*.jar')
 }

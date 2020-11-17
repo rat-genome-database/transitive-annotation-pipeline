@@ -2,7 +2,7 @@
 # shell script to run Transitive Annotation pipeline
 . /etc/profile
 
-APPNAME=TransitiveAnnotPipeline
+APPNAME=transitive-annotation-pipeline
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 
