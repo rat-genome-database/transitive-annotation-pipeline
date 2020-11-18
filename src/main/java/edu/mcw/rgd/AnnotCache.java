@@ -11,10 +11,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AnnotCache {
 
     Logger log = Logger.getLogger("core");
+    Logger logUpdated = Logger.getLogger("updated");
 
     public AtomicInteger insertedAnnots = new AtomicInteger(0);
     // we store them in a map to avoid multiple updates
     public ConcurrentHashMap<Integer, Object> upToDateFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
+    public ConcurrentHashMap<Integer, Object> updatedFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
 
     private List<Annotation> incomingAnnots = new ArrayList<>();
 
@@ -36,7 +38,32 @@ public class AnnotCache {
                     dao.insertAnnotation(a);
                     insertedAnnots.incrementAndGet();
                 } else {
-                    upToDateFullAnnotKeys.put(fullAnnotKey, 0);
+
+                    // check if you need to update notes, annot ext
+                    Annotation annotInRgd = dao.getAnnotation(fullAnnotKey);
+                    boolean changed = !Utils.stringsAreEqual(annotInRgd.getNotes(), a.getNotes())
+                            || !Utils.stringsAreEqual(annotInRgd.getAnnotationExtension(), a.getAnnotationExtension())
+                            || !Utils.stringsAreEqual(annotInRgd.getGeneProductFormId(), a.getGeneProductFormId());
+
+                    if( changed ) {
+                        String msg = "KEY:" + fullAnnotKey + " " + a.getTermAcc() + " RGD:" + a.getAnnotatedObjectRgdId() + " RefRGD:" + a.getRefRgdId() + " " + a.getEvidence() + " W:" + a.getWithInfo();
+                        if( !Utils.stringsAreEqual(annotInRgd.getAnnotationExtension(), a.getAnnotationExtension()) ) {
+                            msg += "\n   ANNOT_EXT  OLD["+Utils.NVL(annotInRgd.getAnnotationExtension(),"")+"]  NEW["+a.getAnnotationExtension()+"]";
+                        }
+                        if( !Utils.stringsAreEqual(annotInRgd.getGeneProductFormId(), a.getGeneProductFormId()) ) {
+                            msg += "\n   GENE_FORM  OLD["+Utils.NVL(annotInRgd.getGeneProductFormId(),"")+"]  NEW["+a.getGeneProductFormId()+"]";
+                        }
+                        if( !Utils.stringsAreEqual(annotInRgd.getNotes(), a.getNotes()) ) {
+                            msg += "\n   NOTES  OLD["+Utils.NVL(annotInRgd.getNotes(),"")+"]  NEW["+a.getNotes()+"]";
+                        }
+                        logUpdated.info(msg);
+
+                        a.setKey(fullAnnotKey);
+                        dao.updateAnnotation(a);
+                        updatedFullAnnotKeys.put(fullAnnotKey, 0);
+                    } else {
+                        upToDateFullAnnotKeys.put(fullAnnotKey, 0);
+                    }
                 }
             } catch(Exception e) {
                 log.warn("PROBLEMATIC ANNOT=  "+a.dump("|"));
@@ -143,6 +170,7 @@ public class AnnotCache {
     public void clear() {
         insertedAnnots.set(0);
         upToDateFullAnnotKeys.clear();
+        updatedFullAnnotKeys.clear();
         incomingAnnots.clear();
     }
 }

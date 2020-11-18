@@ -53,6 +53,11 @@ public class Loader {
             log.info("annotations inserted: " + Utils.formatThousands(count));
         }
 
+        count = annotCache.updatedFullAnnotKeys.size();
+        if( count!=0 ) {
+            log.info("annotations updated: " + Utils.formatThousands(count));
+        }
+
         // update last modified date for matching annots in batches
         updateLastModified(annotCache);
 

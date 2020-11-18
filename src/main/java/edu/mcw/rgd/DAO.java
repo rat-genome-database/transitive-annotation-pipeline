@@ -103,6 +103,14 @@ public class DAO {
         return annotationDAO.getAnnotationKey(annot);
     }
 
+    public Annotation getAnnotation(int annotKey) throws Exception {
+        return annotationDAO.getAnnotation(annotKey);
+    }
+
+    public void updateAnnotation(Annotation annot) throws Exception {
+        annotationDAO.updateAnnotation(annot);
+    }
+
     /**
      * Insert new annotation into FULL_ANNOT table; full_annot_key will be auto generated from sequence and returned
      * <p>
