@@ -108,7 +108,17 @@ public class DAO {
     }
 
     public void updateAnnotation(Annotation annot) throws Exception {
-        annotationDAO.updateAnnotation(annot);
+        //annotationDAO.updateAnnotation(annot);
+
+            String sql = "UPDATE full_annot SET term=?, annotated_object_rgd_id=?, rgd_object_key=?, data_src=?, object_symbol=?, " +
+                    "ref_rgd_id=?, evidence=?, with_info=?, aspect=?, object_name=?, qualifier=?, relative_to=?, last_modified_date=?, " +
+                    "term_acc=?, created_by=?, last_modified_by=?, xref_source=?, annotation_extension=?, gene_product_form_id=?, notes=? " +
+                    "WHERE full_annot_key=?";
+            annotationDAO.update(sql, new Object[]{annot.getTerm(), annot.getAnnotatedObjectRgdId(), annot.getRgdObjectKey(), annot.getDataSrc(),
+                    annot.getObjectSymbol(), annot.getRefRgdId(), annot.getEvidence(), annot.getWithInfo(), annot.getAspect(),
+                    annot.getObjectName(), annot.getQualifier(), annot.getRelativeTo(), annot.getLastModifiedDate(),
+                    annot.getTermAcc(), annot.getCreatedBy(), annot.getLastModifiedBy(), annot.getXrefSource(), annot.getAnnotationExtension(),
+                    annot.getGeneProductFormId(), annot.getNotes(), annot.getKey()});
     }
 
     /**
