@@ -1,3 +1,6 @@
+May 13, 2021
+  -tuned up logging
+
 Dec 03, 2020
   -patch to overcome Oracle internal limitation: "ORA-24816: Expanded non LONG bind data supplied after actual LONG or LOB column"
    (method AnnotationDAO.updateAnnotation from rgdcore has been updated)
