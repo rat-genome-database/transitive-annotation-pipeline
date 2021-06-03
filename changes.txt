@@ -1,3 +1,6 @@
+Jun 03, 2021
+  renamed git branch 'master' to 'main'
+
 May 13, 2021
   -tuned up logging
 

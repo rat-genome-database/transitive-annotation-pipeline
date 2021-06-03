@@ -11,7 +11,7 @@
     </bean>
 
     <bean id="loader" class="edu.mcw.rgd.Loader">
-        <property name="version" value="Transitive Annotation pipeline  -- build May 13, 2021" />
+        <property name="version" value="Transitive Annotation pipeline  -- build Jun 03, 2021" />
         <property name="createdBy" value="67" />
         <property name="refRgdId" value="9068941"/><!--2298974 - test reference -->
         <property name="dao" ref="dao"/>
