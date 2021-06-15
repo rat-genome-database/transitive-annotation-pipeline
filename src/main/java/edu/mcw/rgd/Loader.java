@@ -1,6 +1,7 @@
 package edu.mcw.rgd;
 
 import edu.mcw.rgd.datamodel.Ortholog;
+import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
@@ -149,7 +150,15 @@ public class Loader {
         String forbiddenAspectClause = Utils.buildInPhraseQuoted(dao.getExcludedOntologyAspects());
         String evidenceClause = Utils.buildInPhraseQuoted(getInputEvidenceCodes());
 
-        log.info("processed species: "+Utils.concatenate(", ", getProcessedSpeciesTypeKeys(), "getCommonName"));
+        String processedSpecies = "";
+        for( int speciesTypeKey: getProcessedSpeciesTypeKeys() ) {
+            if( !processedSpecies.isEmpty() ) {
+                processedSpecies += ", ";
+            }
+            processedSpecies += SpeciesType.getCommonName(speciesTypeKey);
+        }
+
+        log.info("processed species: "+processedSpecies);
         log.info("processed manual evidence codes: "+Utils.concatenate(getInputEvidenceCodes(), ", "));
         log.info("   AND TAS evidence code for PW annotations");
 
