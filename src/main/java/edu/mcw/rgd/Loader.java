@@ -1,7 +1,6 @@
 package edu.mcw.rgd;
 
 import edu.mcw.rgd.datamodel.Ortholog;
-import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
@@ -20,7 +19,6 @@ public class Loader {
     private String evidenceCode;
     private DAO dao;
     private List<String> inputEvidenceCodes;
-    private List<String> processedSpecies;
     private Set<Integer> processedSpeciesTypeKeys;
 
     Logger log = Logger.getLogger("core");
@@ -34,12 +32,6 @@ public class Loader {
         log.info("  started at: "+sdt.format(dateStart));
         log.info("  "+dao.getConnectionInfo());
         log.info("===");
-
-        // limit species to searchable species
-        processedSpeciesTypeKeys = new HashSet<>();
-        for( String sp: getProcessedSpecies() ) {
-            processedSpeciesTypeKeys.add(SpeciesType.parse(sp));
-        }
 
         int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
 
@@ -157,7 +149,7 @@ public class Loader {
         String forbiddenAspectClause = Utils.buildInPhraseQuoted(dao.getExcludedOntologyAspects());
         String evidenceClause = Utils.buildInPhraseQuoted(getInputEvidenceCodes());
 
-        log.info("processed species: "+Utils.concatenate(getProcessedSpecies(), ", "));
+        log.info("processed species: "+Utils.concatenate(", ", getProcessedSpeciesTypeKeys(), "getCommonName"));
         log.info("processed manual evidence codes: "+Utils.concatenate(getInputEvidenceCodes(), ", "));
         log.info("   AND TAS evidence code for PW annotations");
 
@@ -226,11 +218,11 @@ public class Loader {
         return inputEvidenceCodes;
     }
 
-    public void setProcessedSpecies(List<String> processedSpecies) {
-        this.processedSpecies = processedSpecies;
+    public Set<Integer> getProcessedSpeciesTypeKeys() {
+        return processedSpeciesTypeKeys;
     }
 
-    public List<String> getProcessedSpecies() {
-        return processedSpecies;
+    public void setProcessedSpeciesTypeKeys(Set<Integer> processedSpeciesTypeKeys) {
+        this.processedSpeciesTypeKeys = processedSpeciesTypeKeys;
     }
 }

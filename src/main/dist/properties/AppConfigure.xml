@@ -11,7 +11,7 @@
     </bean>
 
     <bean id="loader" class="edu.mcw.rgd.Loader">
-        <property name="version" value="Transitive Annotation pipeline  -- build Jun 03, 2021" />
+        <property name="version" value="Transitive Annotation pipeline  -- build Jun 15, 2021" />
         <property name="createdBy" value="67" />
         <property name="refRgdId" value="9068941"/><!--2298974 - test reference -->
         <property name="dao" ref="dao"/>
@@ -32,19 +32,19 @@
                 <value>HEP</value>
             </list>
         </property>
-        <property name="processedSpecies" >
-            <list>
-                <value>rat</value>
-                <value>mouse</value>
-                <value>human</value>
-                <value>bonobo</value>
-                <value>chinchilla</value>
-                <value>dog</value>
-                <value>squirrel</value>
-                <value>pig</value>
-                <value>vervet</value>
-                <value>molerat</value>
-            </list>
+        <property name="processedSpeciesTypeKeys" >
+            <set>
+                <value>3</value><!-- rat -->
+                <value>2</value><!-- mouse -->
+                <value>1</value><!-- human -->
+                <value>5</value><!-- bonobo -->
+                <value>4</value><!-- chinchilla -->
+                <value>6</value><!-- dog -->
+                <value>7</value><!-- squirrel -->
+                <value>9</value><!-- pig -->
+                <value>13</value><!-- vervet - African green monkey -->
+                <value>14</value><!-- naked mole rat -->
+            </set>
         </property>
     </bean>
 </beans>

@@ -1,3 +1,6 @@
+Jun 15, 2021
+  refactored code for processed species list
+
 Jun 03, 2021
   renamed git branch 'master' to 'main'
 
