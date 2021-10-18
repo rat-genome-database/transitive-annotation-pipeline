@@ -36,6 +36,12 @@ public class Loader {
 
         int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
 
+        // key: species-type-key; value: annot count
+        Map<Integer, Integer> origAnnotCountMap = new HashMap<>();
+        for( Integer sp: processedSpeciesTypeKeys ) {
+            origAnnotCountMap.put(sp, dao.getAnnotationCount(getRefRgdId(), sp));
+        }
+
         AnnotCache annotCache = processIncomingAnnotations();
 
         // qc incoming annots to determine annots for insertion / deletion
@@ -71,6 +77,13 @@ public class Loader {
         int diffAnnotCount = newAnnotCount - origAnnotCount;
         String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
         log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
+
+        for( Integer sp: processedSpeciesTypeKeys ) {
+            newAnnotCount = dao.getAnnotationCount(getRefRgdId(), sp);
+            diffAnnotCount = newAnnotCount - origAnnotCount;
+            diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
+            log.info("final annotation count for "+SpeciesType.getCommonName(sp)+": "+Utils.formatThousands(newAnnotCount)+diffCountStr);
+        }
 
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
         log.info("");
