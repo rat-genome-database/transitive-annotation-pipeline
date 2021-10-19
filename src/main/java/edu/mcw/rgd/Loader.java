@@ -80,9 +80,9 @@ public class Loader {
 
         for( Integer sp: processedSpeciesTypeKeys ) {
             newAnnotCount = dao.getAnnotationCount(getRefRgdId(), sp);
-            diffAnnotCount = newAnnotCount - origAnnotCount;
-            diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
-            log.info("final annotation count for "+SpeciesType.getCommonName(sp)+": "+Utils.formatThousands(newAnnotCount)+diffCountStr);
+            diffAnnotCount = newAnnotCount - origAnnotCountMap.get(sp);
+            diffCountStr = diffAnnotCount!=0 ? "     diff: "+ plusMinusNF.format(diffAnnotCount) : "";
+            log.info("      for "+SpeciesType.getCommonName(sp)+": "+Utils.formatThousands(newAnnotCount)+diffCountStr);
         }
 
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
