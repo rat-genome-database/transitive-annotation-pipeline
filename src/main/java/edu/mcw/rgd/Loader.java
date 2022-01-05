@@ -5,7 +5,8 @@ import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -22,7 +23,7 @@ public class Loader {
     private List<String> inputEvidenceCodes;
     private Set<Integer> processedSpeciesTypeKeys;
 
-    Logger log = Logger.getLogger("core");
+    Logger log = LogManager.getLogger("status");
 
     public void run() throws Exception {
 
@@ -128,7 +129,7 @@ public class Loader {
                 }
 
             } catch(Exception e) {
-                Utils.printStackTrace(e, log);
+                //Utils.printStackTrace(e, log);
                 throw new RuntimeException(e);
             }
         });

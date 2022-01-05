@@ -2,7 +2,8 @@ package edu.mcw.rgd;
 
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,8 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AnnotCache {
 
-    Logger log = Logger.getLogger("core");
-    Logger logUpdated = Logger.getLogger("updated");
+    Logger log = LogManager.getLogger("status");
+    Logger logUpdated = LogManager.getLogger("updated");
 
     public AtomicInteger insertedAnnots = new AtomicInteger(0);
     // we store them in a map to avoid multiple updates
