@@ -56,8 +56,7 @@ public class DAO {
     }
 
     public int getAnnotationCount(int refRgdId, int speciesTypeKey) throws Exception {
-        String query = "SELECT COUNT(*) FROM full_annot a,rgd_ids r WHERE ref_rgd_id=? AND r.species_type_key=? AND annotated_object_rgd_id=rgd_id AND r.object_status='ACTIVE'";
-        return annotationDAO.getCount(query, refRgdId, speciesTypeKey);
+        return annotationDAO.getCountOfAnnotationsByReference(refRgdId, speciesTypeKey);
     }
 
     public List<Annotation> getIncomingAnnotations(int refRgdId, String forbiddenAspectClause, String evidenceClause, String speciesClause) throws Exception {
