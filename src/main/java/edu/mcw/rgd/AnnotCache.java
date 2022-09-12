@@ -98,7 +98,7 @@ public class AnnotCache {
      */
     List<Annotation> mergeIncomingAnnots() throws CloneNotSupportedException {
 
-        log.info("   incoming annot count = "+Utils.formatThousands(incomingAnnots.size()));
+        log.info("   incoming transitive annot count = "+Utils.formatThousands(incomingAnnots.size()));
 
         Map<String, Annotation> mergedAnnots = new HashMap<>();
         for( Annotation a: incomingAnnots ) {
@@ -124,7 +124,7 @@ public class AnnotCache {
         List<Annotation> mergedAnnotList = new ArrayList<>(mergedAnnots.values());
 
         splitAnnots(mergedAnnotList);
-        log.info("   merged annot count = "+Utils.formatThousands(mergedAnnotList.size()));
+        log.info("   merged transitive annot count = "+Utils.formatThousands(mergedAnnotList.size()));
         return mergedAnnotList;
     }
 
