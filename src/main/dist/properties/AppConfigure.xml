@@ -32,19 +32,5 @@
                 <value>HEP</value>
             </list>
         </property>
-        <property name="processedSpeciesTypeKeys" >
-            <set>
-                <value>3</value><!-- rat -->
-                <value>2</value><!-- mouse -->
-                <value>1</value><!-- human -->
-                <value>5</value><!-- bonobo -->
-                <value>4</value><!-- chinchilla -->
-                <value>6</value><!-- dog -->
-                <value>7</value><!-- squirrel -->
-                <value>9</value><!-- pig -->
-                <value>13</value><!-- vervet - African green monkey -->
-                <value>14</value><!-- naked mole rat -->
-            </set>
-        </property>
     </bean>
 </beans>

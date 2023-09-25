@@ -21,7 +21,6 @@ public class Loader {
     private String evidenceCode;
     private DAO dao;
     private List<String> inputEvidenceCodes;
-    private Set<Integer> processedSpeciesTypeKeys;
 
     Logger log = LogManager.getLogger("status");
 
@@ -37,32 +36,15 @@ public class Loader {
 
         int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
 
+        Set<Integer> processedSpeciesTypeKeys = getProcessedSpeciesTypeKeys();
+
         // key: species-type-key; value: annot count
         Map<Integer, Integer> origAnnotCountMap = new HashMap<>();
         for( Integer sp: processedSpeciesTypeKeys ) {
             origAnnotCountMap.put(sp, dao.getAnnotationCount(getRefRgdId(), sp));
         }
 
-        AnnotCache annotCache = processIncomingAnnotations();
-
-        // qc incoming annots to determine annots for insertion / deletion
-        annotCache.qcAndLoadAnnots(dao);
-
-        int count = annotCache.insertedAnnots.get();
-        if( count!=0 ) {
-            log.info("annotations inserted: " + Utils.formatThousands(count));
-        }
-
-        count = annotCache.updatedFullAnnotKeys.size();
-        if( count!=0 ) {
-            log.info("annotations updated: " + Utils.formatThousands(count));
-        }
-
-        // update last modified date for matching annots in batches
-        updateLastModified(annotCache);
-
-        annotCache.clear();
-        annotCache = null;
+        handleAnnotations(processedSpeciesTypeKeys);
 
         log.debug("deleting stale annotations...");
         int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), log);
@@ -90,9 +72,43 @@ public class Loader {
         log.info("");
     }
 
-    AnnotCache processIncomingAnnotations() throws Exception {
+    Set<Integer> getProcessedSpeciesTypeKeys() {
 
-        List<Annotation> incomingAnnotations = getIncomingAnnotations();
+        Set<Integer> processedSpeciesTypeKeys = new HashSet<>();
+        for( int sp: SpeciesType.getSpeciesTypeKeys() ) {
+            if( SpeciesType.isSearchable(sp) ) {
+                processedSpeciesTypeKeys.add(sp);
+            }
+        }
+        return processedSpeciesTypeKeys;
+    }
+
+    void handleAnnotations( Set<Integer> processedSpeciesTypeKeys ) throws Exception {
+
+        AnnotCache annotCache = processIncomingAnnotations(processedSpeciesTypeKeys);
+
+        // qc incoming annots to determine annots for insertion / deletion
+        annotCache.qcAndLoadAnnots(dao);
+
+        int count = annotCache.insertedAnnots.get();
+        if( count!=0 ) {
+            log.info("annotations inserted: " + Utils.formatThousands(count));
+        }
+
+        count = annotCache.updatedFullAnnotKeys.size();
+        if( count!=0 ) {
+            log.info("annotations updated: " + Utils.formatThousands(count));
+        }
+
+        // update last modified date for matching annots in batches
+        updateLastModified(annotCache);
+
+        annotCache.clear();
+    }
+
+    AnnotCache processIncomingAnnotations( Set<Integer> processedSpeciesTypeKeys ) throws Exception {
+
+        List<Annotation> incomingAnnotations = getIncomingAnnotations(processedSpeciesTypeKeys);
         log.info("incoming manual gene annotations: "+Utils.formatThousands(incomingAnnotations.size()));
 
         AnnotCache annotCache = new AnnotCache();
@@ -158,7 +174,7 @@ public class Loader {
         }
     }
 
-    List<Annotation> getIncomingAnnotations() throws Exception {
+    List<Annotation> getIncomingAnnotations( Collection<Integer> processedSpeciesTypeKeys ) throws Exception {
 
         String speciesClause = Utils.buildInPhrase(processedSpeciesTypeKeys);
         String forbiddenAspectClause = Utils.buildInPhraseQuoted(dao.getExcludedOntologyAspects());
@@ -239,13 +255,5 @@ public class Loader {
 
     public List<String> getInputEvidenceCodes() {
         return inputEvidenceCodes;
-    }
-
-    public Set<Integer> getProcessedSpeciesTypeKeys() {
-        return processedSpeciesTypeKeys;
-    }
-
-    public void setProcessedSpeciesTypeKeys(Set<Integer> processedSpeciesTypeKeys) {
-        this.processedSpeciesTypeKeys = processedSpeciesTypeKeys;
     }
 }
