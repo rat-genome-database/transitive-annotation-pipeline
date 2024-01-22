@@ -1,3 +1,6 @@
+Jan 22, 2024
+  updated to java 17
+
 Sep 25, 2023
   simplified code to determine processed species
 
