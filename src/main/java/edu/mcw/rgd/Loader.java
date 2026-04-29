@@ -4,6 +4,7 @@ import edu.mcw.rgd.datamodel.Ortholog;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
+import edu.mcw.rgd.process.MemoryMonitor;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,42 +35,52 @@ public class Loader {
         log.info("  "+dao.getConnectionInfo());
         log.info("===");
 
-        int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        memoryMonitor.start();
 
-        Set<Integer> processedSpeciesTypeKeys = getProcessedSpeciesTypeKeys();
+        boolean ok = false;
+        try {
+            int origAnnotCount = dao.getAnnotationCount(getRefRgdId());
 
-        // key: species-type-key; value: annot count
-        Map<Integer, Integer> origAnnotCountMap = new HashMap<>();
-        for( Integer sp: processedSpeciesTypeKeys ) {
-            origAnnotCountMap.put(sp, dao.getAnnotationCount(getRefRgdId(), sp));
+            Set<Integer> processedSpeciesTypeKeys = getProcessedSpeciesTypeKeys();
+
+            // key: species-type-key; value: annot count
+            Map<Integer, Integer> origAnnotCountMap = new HashMap<>();
+            for( Integer sp: processedSpeciesTypeKeys ) {
+                origAnnotCountMap.put(sp, dao.getAnnotationCount(getRefRgdId(), sp));
+            }
+
+            handleAnnotations(processedSpeciesTypeKeys);
+
+            log.debug("deleting stale annotations...");
+            int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), log);
+            if( annotDeleted!=0 ) {
+                log.info("annotations deleted : " + Utils.formatThousands(annotDeleted));
+            }
+
+            int newAnnotCount = dao.getAnnotationCount(getRefRgdId());
+
+            log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted)+"    (last-modified-date updated)");
+
+            NumberFormat plusMinusNF = new DecimalFormat(" +###,###,###; -###,###,###");
+            int diffAnnotCount = newAnnotCount - origAnnotCount;
+            String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
+            log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
+
+            for( Integer sp: processedSpeciesTypeKeys ) {
+                newAnnotCount = dao.getAnnotationCount(getRefRgdId(), sp);
+                diffAnnotCount = newAnnotCount - origAnnotCountMap.get(sp);
+                diffCountStr = diffAnnotCount!=0 ? "     diff: "+ plusMinusNF.format(diffAnnotCount) : "";
+                log.info("      for "+SpeciesType.getCommonName(sp)+": "+Utils.formatThousands(newAnnotCount)+diffCountStr);
+            }
+
+            ok = true;
+        } finally {
+            memoryMonitor.stop();
+            log.info(memoryMonitor.getSummary());
+            log.info((ok ? "=== DONE === " : "=== FAILED === ") + "elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
+            log.info("");
         }
-
-        handleAnnotations(processedSpeciesTypeKeys);
-
-        log.debug("deleting stale annotations...");
-        int annotDeleted = dao.deleteAnnotationsCreatedBy(getCreatedBy(), dateStart, getRefRgdId(), log);
-        if( annotDeleted!=0 ) {
-            log.info("annotations deleted : " + Utils.formatThousands(annotDeleted));
-        }
-
-        int newAnnotCount = dao.getAnnotationCount(getRefRgdId());
-
-        log.info("annotations matching: "+Utils.formatThousands(origAnnotCount-annotDeleted)+"    (last-modified-date updated)");
-
-        NumberFormat plusMinusNF = new DecimalFormat(" +###,###,###; -###,###,###");
-        int diffAnnotCount = newAnnotCount - origAnnotCount;
-        String diffCountStr = diffAnnotCount!=0 ? "     difference: "+ plusMinusNF.format(diffAnnotCount) : "";
-        log.info("final annotation count: "+Utils.formatThousands(newAnnotCount)+diffCountStr);
-
-        for( Integer sp: processedSpeciesTypeKeys ) {
-            newAnnotCount = dao.getAnnotationCount(getRefRgdId(), sp);
-            diffAnnotCount = newAnnotCount - origAnnotCountMap.get(sp);
-            diffCountStr = diffAnnotCount!=0 ? "     diff: "+ plusMinusNF.format(diffAnnotCount) : "";
-            log.info("      for "+SpeciesType.getCommonName(sp)+": "+Utils.formatThousands(newAnnotCount)+diffCountStr);
-        }
-
-        log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
-        log.info("");
     }
 
     Set<Integer> getProcessedSpeciesTypeKeys() {
