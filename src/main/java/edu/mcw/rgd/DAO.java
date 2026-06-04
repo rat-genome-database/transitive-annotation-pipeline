@@ -34,17 +34,25 @@ public class DAO {
         return xdao.getConnectionInfo();
     }
 
-    synchronized public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
+    public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
+        // cache the full, unfiltered ortholog list; species filtering happens on read.
+        // a concurrent map + idempotent fetch lets the parallel stream run concurrently
+        // (the previous 'synchronized' serialized every worker and held the lock during the DB round-trip)
         List<Ortholog> orthos = _orthoCache.get(rgdId);
         if( orthos==null ) {
             orthos = orthologDAO.getOrthologsForSourceRgdId(rgdId);
             _orthoCache.put(rgdId, orthos);
-
-            orthos.removeIf(o -> !allowedSpeciesTypeKeys.contains(o.getDestSpeciesTypeKey()));
         }
-        return orthos;
+
+        List<Ortholog> result = new ArrayList<>(orthos.size());
+        for( Ortholog o: orthos ) {
+            if( allowedSpeciesTypeKeys.contains(o.getDestSpeciesTypeKey()) ) {
+                result.add(o);
+            }
+        }
+        return result;
     }
-    Map<Integer, List<Ortholog>> _orthoCache = new HashMap<>();
+    Map<Integer, List<Ortholog>> _orthoCache = new ConcurrentHashMap<>();
 
     public List<XdbId> getXdbIdsByRgdId(int xdbKey, int rgdId) throws Exception {
 

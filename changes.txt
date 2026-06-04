@@ -1,3 +1,6 @@
+Jun 04, 2026
+  improved parallelism of ortholog lookup; updated dependencies
+
 Apr 29, 2026
   added MemoryMonitor; updated dependencies
 
