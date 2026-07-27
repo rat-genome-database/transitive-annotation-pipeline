@@ -1,3 +1,7 @@
+Jul 27, 2026
+  compute XREF_SOURCE PubMed lookup once per source annotation instead of once per ortholog
+  updated dependencies
+
 Jun 04, 2026
   improved parallelism of ortholog lookup; updated dependencies
 

@@ -130,6 +130,14 @@ public class Loader {
             try {
                 // determine orthologs
                 List<Ortholog> orthos = dao.getOrthologsForSourceRgdId(annot.getAnnotatedObjectRgdId(), processedSpeciesTypeKeys);
+                if( orthos.isEmpty() ) {
+                    return;
+                }
+
+                // XREF_SOURCE is derived only from the source annotation's ref/xref, so it is the
+                // same for every ortholog -- compute it once instead of once per ortholog
+                String newXrefSource = buildXRefSource(annot.getRefRgdId(), annot.getXrefSource());
+                boolean setXrefSource = !Utils.stringsAreEqualIgnoreCase(newXrefSource, annot.getXrefSource());
 
                 for (Ortholog o : orthos) {
 
@@ -137,7 +145,9 @@ public class Loader {
                     Annotation a = (Annotation) annot.clone();
 
                     // put into XREF_SOURCE PMIDs associated with original human annotations
-                    populateXRefSource(a);
+                    if( setXrefSource ) {
+                        a.setXrefSource(newXrefSource);
+                    }
 
                     // if WITH for human is empty, set it to RGD:human-gene-rgd_id
                     if (Utils.isStringEmpty(a.getWithInfo())) {
@@ -163,26 +173,23 @@ public class Loader {
         return annotCache;
     }
 
-    void populateXRefSource(Annotation a) throws Exception {
+    String buildXRefSource(int refRgdId, String xrefSource) throws Exception {
         // read pubmed ids from human reference
         Set<String> pubmedIds = new TreeSet<>();
-        List<XdbId> humanPubMedIds = dao.getXdbIdsByRgdId(XdbId.XDB_KEY_PUBMED, a.getRefRgdId());
+        List<XdbId> humanPubMedIds = dao.getXdbIdsByRgdId(XdbId.XDB_KEY_PUBMED, refRgdId);
         if( !humanPubMedIds.isEmpty() ) {
-            pubmedIds.add("REF_RGD_ID:"+a.getRefRgdId());
+            pubmedIds.add("REF_RGD_ID:"+refRgdId);
             for (XdbId xdbId: humanPubMedIds) {
                 pubmedIds.add("PMID:" + xdbId.getAccId());
             }
         }
 
-        // concatenate them with existing xref source
-        if( !Utils.isStringEmpty(a.getXrefSource()) ) {
-            Collections.addAll(pubmedIds, a.getXrefSource().split("[\\|]"));
+        // combine with the existing xref source
+        if( !Utils.isStringEmpty(xrefSource) ) {
+            Collections.addAll(pubmedIds, xrefSource.split("[\\|]"));
         }
 
-        String newXrefSource = Utils.concatenate(pubmedIds, "|");
-        if( !Utils.stringsAreEqualIgnoreCase(newXrefSource, a.getXrefSource()) ) {
-            a.setXrefSource(newXrefSource);
-        }
+        return Utils.concatenate(pubmedIds, "|");
     }
 
     List<Annotation> getIncomingAnnotations( Collection<Integer> processedSpeciesTypeKeys ) throws Exception {
