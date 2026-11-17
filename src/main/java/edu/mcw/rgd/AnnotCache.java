@@ -86,6 +86,10 @@ public class AnnotCache {
             }
         }
 
+        // annots for gene+term+qualifier already annotated by other sources are redundant and are not loaded
+        log.info("   skipped, already annotated by other sources = "+Utils.formatThousands(mergedAnnots.size()-uniqueAnnots.size()));
+        log.info("   unique transitive annot count = "+Utils.formatThousands(uniqueAnnots.size()));
+
         mergedAnnots.clear();
 
         return uniqueAnnots;

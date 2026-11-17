@@ -1,3 +1,6 @@
+Nov 17, 2026
+  run report: count of transitive annots skipped because already annotated by other sources; updated dependencies
+
 Oct 21, 2026
   migrated to postgres; updated dependencies
 
